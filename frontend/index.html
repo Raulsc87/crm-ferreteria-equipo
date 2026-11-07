@@ -94,12 +94,12 @@
     </main>
   </template>
   <template id="clients-view">
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+    <div class="clients-toolbar d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
       <span data-capacity class="badge text-bg-success fs-6"></span>
       <button type="button" data-client-action="refresh" class="btn btn-outline-secondary btn-sm">Actualizar listas</button>
     </div>
     <p data-capacity-error class="alert alert-warning small" role="alert" hidden></p>
-    <div class="d-flex flex-wrap gap-2 mb-4" role="group" aria-label="Opciones de clientes">
+    <div class="client-tabs d-flex flex-wrap gap-2 mb-4" role="group" aria-label="Opciones de clientes">
       <button type="button" data-client-action="list" class="btn btn-outline-success">Mis clientes</button>
       <button type="button" data-client-action="available" class="btn btn-outline-success">Disponibles</button>
       <button type="button" data-client-action="create" class="btn btn-success">Crear cliente</button>
@@ -109,8 +109,8 @@
     <div data-client-body></div>
   </template>
   <template id="clients-list">
-    <h3 data-list-heading class="h5 mb-3"></h3>
-    <form id="client-search" class="row g-2 mb-4" role="search" novalidate>
+    <h3 data-list-heading class="module-heading h5 mb-3"></h3>
+    <form id="client-search" class="compact-form row g-2 mb-4" role="search" novalidate>
       <div class="col-12 col-md">
         <label for="client-query" class="form-label">Buscar por nombre o NIT</label>
         <input id="client-query" name="q" type="search" maxlength="150" class="form-control" placeholder="Escriba un nombre, NIT o CF">
@@ -119,22 +119,27 @@
     </form>
     <p data-list-status role="status" hidden></p>
     <p data-list-error class="alert alert-danger" role="alert" hidden></p>
-    <div data-client-list class="list-group"></div>
+    <div data-client-list class="client-list list-group"></div>
   </template>
   <template id="client-detail">
-    <h3 data-detail-name class="h5 mb-3"></h3>
-    <dl class="row">
+    <article class="client-detail-panel">
+    <h3 data-detail-name class="module-heading h5 mb-3"></h3>
+    <dl class="client-details row mb-3">
       <dt class="col-sm-3">NIT</dt><dd data-detail-nit class="col-sm-9"></dd>
       <dt class="col-sm-3">Teléfono</dt><dd data-detail-telefono class="col-sm-9"></dd>
       <dt class="col-sm-3">Correo</dt><dd data-detail-correo class="col-sm-9"></dd>
     </dl>
-    <button type="button" data-client-action="edit" class="btn btn-success">Editar cliente</button>
-    <button type="button" data-activity-action="new" class="btn btn-outline-success">Registrar actividad</button>
+    <div class="detail-actions d-flex flex-wrap gap-2">
+      <button type="button" data-client-action="edit" class="btn btn-success">Editar cliente</button>
+      <button type="button" data-activity-action="new" class="btn btn-outline-success">Registrar actividad</button>
+    </div>
     <div data-activity-form-container class="mt-4"></div>
+    </article>
   </template>
   <template id="client-form">
-    <h3 data-form-heading class="h5 mb-3"></h3>
-    <p class="small text-body-secondary">Use CF para consumidor final, o un NIT válido, por ejemplo 4521817-K. Escriba ocho dígitos para el teléfono, por ejemplo 55551234; también se admite +502 (5555)-1234. La API normaliza los datos y comprueba su validez y duplicados.</p>
+    <div class="form-panel compact-form">
+    <h3 data-form-heading class="module-heading h5 mb-3"></h3>
+    <p class="form-help small text-body-secondary">Use CF para consumidor final, o un NIT válido, por ejemplo 4521817-K. Escriba ocho dígitos para el teléfono, por ejemplo 55551234; también se admite +502 (5555)-1234. La API normaliza los datos y comprueba su validez y duplicados.</p>
     <form id="client-form-fields" class="row g-3" novalidate>
       <div class="col-12">
         <label for="client-nombre" class="form-label">Nombre</label>
@@ -161,6 +166,7 @@
         <button type="button" data-client-action="list" class="btn btn-outline-secondary">Cancelar</button>
       </div>
     </form>
+    </div>
   </template>
   <template id="opportunities-view">
     <div class="d-flex flex-wrap gap-2 mb-4">

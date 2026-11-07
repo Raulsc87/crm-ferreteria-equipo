@@ -5,7 +5,7 @@ function text(parent, selector, value) { parent.querySelector(selector).textCont
 function message(parent, selector, value) { const element = parent.querySelector(selector); element.textContent = value; element.hidden = !value; }
 function button(label, action, id, disabled = false) {
   const element = document.createElement('button');
-  element.type = 'button'; element.className = 'btn btn-outline-success btn-sm'; element.textContent = label;
+  element.type = 'button'; element.className = 'client-row-action btn btn-outline-success btn-sm'; element.textContent = label;
   element.dataset.clientAction = action; if (id !== undefined) element.dataset.id = id;
   element.disabled = disabled; return element;
 }
@@ -14,6 +14,12 @@ export function renderClients(container, state, activities) {
   const content = template('clients-view');
   const busy = state.saving || state.taking !== null || Boolean(activities.busy);
   for (const element of content.querySelectorAll('[data-client-action]')) element.disabled = busy;
+  const activeAction = state.mode === 'available' ? 'available' : state.mode === 'create' ? 'create' : 'list';
+  for (const element of content.querySelectorAll('.client-tabs [data-client-action]')) {
+    const active = element.dataset.clientAction === activeAction;
+    element.classList.toggle('active', active);
+    element.setAttribute('aria-pressed', String(active));
+  }
   text(content, '[data-capacity]', state.capacityLoading ? 'Consultando cartera…' : state.capacity ? `${state.capacity.clientes} / ${state.capacity.maximo} clientes` : 'Cartera no disponible');
   message(content, '[data-capacity-error]', state.capacityError);
   message(content, '[data-client-error]', state.error);
@@ -37,8 +43,8 @@ function renderList(container, state, available) {
   message(content, '[data-list-error]', error);
   const list = content.querySelector('[data-client-list]');
   if (!loading && !error) for (const row of rows) {
-    const item = document.createElement('div'); item.className = 'list-group-item d-flex flex-wrap align-items-center justify-content-between gap-3';
-    const identity = document.createElement('div'); identity.className = 'text-break';
+    const item = document.createElement('div'); item.className = 'client-list-item list-group-item d-flex flex-wrap align-items-center justify-content-between gap-3';
+    const identity = document.createElement('div'); identity.className = 'client-identity text-break';
     const name = document.createElement('p'); name.className = 'fw-semibold mb-1'; name.textContent = row.nombre; identity.append(name);
     if (!available) { const nit = document.createElement('p'); nit.className = 'small text-body-secondary mb-0'; nit.textContent = 'NIT: ' + row.nit; identity.append(nit); }
     // Disponibles solo expone id y nombre; no pedir ni inferir datos privados.

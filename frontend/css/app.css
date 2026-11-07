@@ -255,6 +255,95 @@ textarea.form-control {
   border-radius: 0.55rem;
 }
 
+.module-heading {
+  color: var(--crm-navy-900);
+}
+
+.compact-form {
+  max-width: 46rem;
+}
+
+.form-panel,
+.client-detail-panel {
+  max-width: 48rem;
+  padding: 1.1rem;
+  background: var(--crm-gray-050);
+  border: 1px solid var(--crm-gray-300);
+  border-radius: var(--crm-radius);
+}
+
+.form-help {
+  max-width: 42rem;
+  padding: 0.75rem;
+  background: #fff;
+  border-left: 0.25rem solid var(--crm-navy-700);
+  border-radius: 0.35rem;
+}
+
+.clients-toolbar {
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--crm-gray-300);
+}
+
+.clients-toolbar [data-capacity] {
+  padding: 0.58rem 0.8rem;
+  font-weight: 700;
+}
+
+.client-tabs .btn.active {
+  color: #fff;
+  background: var(--crm-navy-800);
+  border-color: var(--crm-navy-800);
+}
+
+.client-tabs [data-client-action="create"].active {
+  background: var(--crm-orange-700);
+  border-color: var(--crm-orange-700);
+}
+
+.client-list {
+  overflow: hidden;
+  border: 1px solid var(--crm-gray-300);
+  border-radius: var(--crm-radius);
+}
+
+.client-list-item {
+  min-height: 4.4rem;
+  padding: 0.75rem 0.9rem;
+  border-inline: 0;
+}
+
+.client-list-item:first-child {
+  border-top: 0;
+}
+
+.client-list-item:last-child {
+  border-bottom: 0;
+}
+
+.client-list-item:hover {
+  background: var(--crm-gray-050);
+}
+
+.client-identity {
+  min-width: 0;
+}
+
+.client-details dt {
+  color: var(--crm-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.client-details dd {
+  font-weight: 600;
+}
+
+.detail-actions {
+  padding-top: 0.35rem;
+}
+
 @media (max-width: 575.98px) {
   .app-header .container,
   .seller-profile {
@@ -278,5 +367,25 @@ textarea.form-control {
 
   .workspace-card .card-body {
     padding: 1rem !important;
+  }
+
+  .clients-toolbar,
+  .client-tabs,
+  .detail-actions {
+    align-items: stretch !important;
+  }
+
+  .client-tabs .btn,
+  .detail-actions .btn {
+    flex: 1 1 100%;
+  }
+
+  .client-list-item,
+  .client-list-item .client-row-action {
+    width: 100%;
+  }
+
+  .client-list-item .client-row-action {
+    margin-top: 0.15rem;
   }
 }
