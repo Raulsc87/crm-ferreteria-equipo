@@ -1457,3 +1457,42 @@ Entregables del enunciado presentes: README, AGENTS, .gitignore, especificación
 Pendientes concretos: revisión en pareja y ensayo de defensa de 15 minutos, Postman gráfico, confirmar el registro del aula, contribuciones reales de ambos integrantes, acceso del catedrático al repositorio y preparar el hito entrega-final solo cuando se autorice. Git muestra únicamente autor Raul Soto y ningún remoto; no se atribuye trabajo a Diego ni se configura acceso externo. Cambio de requisito/spec-v2 solo cuando se publique. La defensa con solo VerificacionSeeder requiere preparar aparte un entorno exclusivo autorizado; no se reinició una base existente para ello. Se detiene esta etapa después del commit descriptivo, sin push ni etiqueta de entrega.
 
 Revisión previa al commit: 230 archivos versionados o candidatos comprobados contra secretos reales de los perfiles locales; ningún hallazgo. La contraseña pública permanece únicamente en los archivos permitidos. Se excluyen .env, dependencias, compilados y temporales; los nueve perfiles de navegador propios se retiraron tras inspeccionar sus capturas. Sin cambios de dependencias ni lockfiles. git diff --check aprobado. El commit incluye solo las dos correcciones descritas, pruebas/auxiliares de revisión y documentación.
+
+## 35. Rediseño visual de la SPA — 7 de noviembre de 2026
+
+La rama `frontend-diego` empezó limpia y sincronizada con el remoto en `cc341bbe53d2d56091285bd17a47404c10bf72ae`. Se confirmó la identidad local exclusiva de este repositorio como Diego7 `<diegoxicara07@gmail.com>`. Se conservaron el contrato HTTP, la sesión, permisos, validaciones, fechas, precios, cálculos, el patrón estado → render y la delegación de eventos.
+
+### Etapas implementadas
+
+| Etapa | Commit | Resultado |
+| --- | --- | --- |
+| Navegación y estilos generales | `e91759c` | Paleta azul marino, gris claro y naranja; navegación activa, nombre del vendedor, foco, mensajes, campos y botones consistentes |
+| Clientes y formularios | `49c453a` | Listados compactos, búsqueda y acciones visibles; formularios con ancho limitado y detalle mejor agrupado |
+| Oportunidades y cotizaciones | `63fdc85` | Embudo y etapas diferenciados; tarjetas, líneas, cantidades, total, historial y cierre ordenados |
+| Actividades y resumen | `44e1427` | Pendientes, completadas y vencidas diferenciadas con texto y color; cifras en tarjetas claras |
+
+No se fabricó una quinta etapa de estilos: los ajustes móviles necesarios quedaron incluidos donde hubo cambios reales. Se añadió `frontend/css/app.css` después de Bootstrap, sin editar `bootstrap.min.css`. No se agregaron dependencias, frameworks, bibliotecas, fuentes externas ni animaciones.
+
+### Comprobaciones reales
+
+| Comprobación | Resultado |
+| --- | --- |
+| Unidades de cliente HTTP, clientes, oportunidades, actividades y resumen | 43/43 aprobadas, cero fallos |
+| Recorrido visual autónomo en Edge con API simulada en memoria | 1/1 aprobado |
+| Pantallas inspeccionadas | 9 pantallas × 2 anchos: 1280 y 375 px |
+| Desbordamiento horizontal de página | Ninguno en los 18 estados capturados |
+| Operaciones ejercitadas | acceso y error de acceso, formularios y validación, búsqueda/filtros, mensajes, cliente, actividad, oportunidades, confirmación de cierre y resumen |
+| Seguridad de presentación | El recorrido incluye texto hostil y conserva la presentación segura mediante `textContent`; sin HTML ejecutado |
+| Formato y sintaxis | `git diff --check` y `node --check` aprobados |
+
+La prueba `frontend/tests/design-browser.test.mjs` usa únicamente módulos incorporados de Node y Edge ya instalado. Levanta servidores propios temporales en los puertos documentados, no escribe datos de negocio y elimina su perfil/capturas al terminar salvo que se solicite conservarlos para inspección.
+
+No se ejecutaron en esta copia los recorridos reales contra MySQL/API/Laravel porque faltan `api/node_modules`, `laravel/vendor`, los perfiles `.env.testing` y el servicio MySQL. No se instalaron ni copiaron dependencias o secretos y no se tocó ninguna base. La sección 34 conserva la última evidencia integral real del proyecto; este rediseño se comprobó con las unidades existentes y el recorrido visual aislado, por lo que no se presenta la API simulada como evidencia de integración de base de datos.
+
+### Incidencias reales durante la prueba visual
+
+La primera ejecución del nuevo test falló por comillas sin escapar en un selector del propio ejecutor; se corrigió su sintaxis. La segunda agotó la espera de la confirmación porque conservaba una referencia a un formulario sustituido por el render de estado; se corrigió reconsultando el formulario después del cambio. La tercera ejecución aprobó todos los recorridos. Ninguna de las dos incidencias fue un fallo funcional de la SPA.
+
+### Archivos y límites
+
+Los cambios visuales se concentran en `frontend/index.html`, `frontend/css/app.css` y los módulos de vista de clientes, oportunidades y actividades. La verificación añade únicamente `frontend/tests/design-browser.test.mjs` y esta evidencia. No se modificaron Laravel, API, migraciones, bases de datos, contratos, archivos raíz, Bootstrap, dependencias o lockfiles.
