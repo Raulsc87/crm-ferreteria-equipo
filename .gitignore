@@ -1,0 +1,32 @@
+# Secretos de Laravel, API y herramientas locales
+.env
+.env.*
+!.env.example
+!.env.*.example
+auth.json
+*.pem
+*.key
+
+# Dependencias: conservar package-lock.json y composer.lock
+node_modules/
+vendor/
+
+# Archivos generados y registros
+*.log
+npm-debug.log*
+coverage/
+.phpunit.cache/
+.phpunit.result.cache
+/laravel/public/build/
+/laravel/public/hot
+/laravel/public/storage
+/laravel/bootstrap/cache/*.php
+/laravel/storage/framework/cache/data/*
+/laravel/storage/framework/sessions/*
+/laravel/storage/framework/views/*
+/laravel/storage/logs/*
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+Desktop.ini

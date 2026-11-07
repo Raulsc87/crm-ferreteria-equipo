@@ -1,0 +1,4298 @@
+{
+  "info": {
+    "name": "CRM Ferretería · A1–A8",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "20 endpoints contrastados con el contrato. Revisión automática A7/A8: estados, formatos, privacidad y fechas UTC. Use únicamente los perfiles de pruebas y sus fixtures del README; A3/A4/A5 escriben datos. Tokens exportados vacíos. Revisión gráfica y SPA pendientes."
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:3001/api"
+    },
+    {
+      "key": "correo_vendedor",
+      "value": "valeria@crm.test"
+    },
+    {
+      "key": "clave_publica",
+      "value": "Ventas2026"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "spa_origin",
+      "value": "http://127.0.0.1:5500"
+    },
+    {
+      "key": "correo_admin",
+      "value": "admin@crm.test"
+    },
+    {
+      "key": "correo_supervisor",
+      "value": "sergio@crm.test"
+    },
+    {
+      "key": "correo_inactivo",
+      "value": "ivan@crm.test"
+    },
+    {
+      "key": "correo_cupo",
+      "value": ""
+    },
+    {
+      "key": "cliente_id",
+      "value": ""
+    },
+    {
+      "key": "disponible_id",
+      "value": ""
+    },
+    {
+      "key": "telefono_prueba",
+      "value": ""
+    },
+    {
+      "key": "token_cupo",
+      "value": ""
+    },
+    {
+      "key": "oportunidad_id",
+      "value": ""
+    },
+    {
+      "key": "linea_id",
+      "value": ""
+    },
+    {
+      "key": "producto_prueba_id",
+      "value": ""
+    },
+    {
+      "key": "producto_minimo_id",
+      "value": ""
+    },
+    {
+      "key": "producto_inactivo_id",
+      "value": ""
+    },
+    {
+      "key": "actividad_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Login vendedor activo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"correo\": \"{{correo_vendedor}}\",\n  \"clave\": \"{{clave_publica}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if (pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "const body = pm.response.json();",
+              "pm.test(\"Contrato de login\", function () { if (Object.keys(body).sort().join(\",\") !== \"token,usuario\" || Object.keys(body.usuario).sort().join(\",\") !== \"correo,id,nombre\" || typeof body.token !== \"string\") throw new Error(\"Contrato inesperado\"); });",
+              "pm.variables.set(\"token\", body.token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Productos activos con token temporal",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/productos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if (pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Arreglo de productos\", function () { const body = pm.response.json(); if (!Array.isArray(body) || body.some(p => Object.keys(p).sort().join(\",\") !== \"id,nombre,precio\" || typeof p.precio !== \"number\")) throw new Error(\"Contrato inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Contraseña incorrecta",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"correo\": \"{{correo_vendedor}}\",\n  \"clave\": \"Incorrecta\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 401\", function () { if (pm.response.code !== 401) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); if (Object.keys(body).join(\",\") !== \"error\") throw new Error(\"Contrato inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Correo inexistente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"correo\": \"no-existe@crm.test\",\n  \"clave\": \"{{clave_publica}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 401\", function () { if (pm.response.code !== 401) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); if (Object.keys(body).join(\",\") !== \"error\") throw new Error(\"Contrato inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login administrador rechazado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"correo\": \"{{correo_admin}}\",\n  \"clave\": \"{{clave_publica}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 403\", function () { if (pm.response.code !== 403) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); if (Object.keys(body).join(\",\") !== \"error\") throw new Error(\"Contrato inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login supervisor rechazado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"correo\": \"{{correo_supervisor}}\",\n  \"clave\": \"{{clave_publica}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 403\", function () { if (pm.response.code !== 403) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); if (Object.keys(body).join(\",\") !== \"error\") throw new Error(\"Contrato inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login inactivo rechazado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"correo\": \"{{correo_inactivo}}\",\n  \"clave\": \"{{clave_publica}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 403\", function () { if (pm.response.code !== 403) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); if (Object.keys(body).join(\",\") !== \"error\") throw new Error(\"Contrato inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "JSON mal formado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 400\", function () { if (pm.response.code !== 400) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); if (Object.keys(body).join(\",\") !== \"error\") throw new Error(\"Contrato inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cuerpo ausente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 400\", function () { if (pm.response.code !== 400) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); if (Object.keys(body).join(\",\") !== \"error\") throw new Error(\"Contrato inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Campos inválidos",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"correo\": \"incorrecto\",\n  \"clave\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if (pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); if (Object.keys(body).join(\",\") !== \"errores\") throw new Error(\"Contrato inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Campos adicionales rechazados",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"correo\": \"{{correo_vendedor}}\",\n  \"clave\": \"{{clave_publica}}\",\n  \"rol\": \"vendedor\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if (pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); if (Object.keys(body).join(\",\") !== \"errores\") throw new Error(\"Contrato inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Productos sin token",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/productos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 401\", function () { if (pm.response.code !== 401) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); if (Object.keys(body).join(\",\") !== \"error\") throw new Error(\"Contrato inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Productos con token inválido",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer token-invalido"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/productos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 401\", function () { if (pm.response.code !== 401) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); if (Object.keys(body).join(\",\") !== \"error\") throw new Error(\"Contrato inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Origen CORS permitido",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{spa_origin}}"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/productos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if (pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Arreglo de productos\", function () { const body = pm.response.json(); if (!Array.isArray(body) || body.some(p => Object.keys(p).sort().join(\",\") !== \"id,nombre,precio\" || typeof p.precio !== \"number\")) throw new Error(\"Contrato inesperado\"); });",
+              "pm.test(\"Origen exacto\", function () { if (pm.response.headers.get(\"Access-Control-Allow-Origin\") !== pm.variables.get(\"spa_origin\")) throw new Error(\"CORS inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A3 Listar cartera",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if (pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Arreglo público\", function () { const body=pm.response.json(); if(!Array.isArray(body) || body.some(row => Object.keys(row).sort().join(\",\") !== \"correo,id,nit,nombre,telefono\")) throw new Error(\"Lista inesperada\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A3 Buscar por nombre o NIT",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes?q=Postman"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if (pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Arreglo público\", function () { const body=pm.response.json(); if(!Array.isArray(body) || body.some(row => Object.keys(row).sort().join(\",\") !== \"correo,id,nit,nombre,telefono\")) throw new Error(\"Lista inesperada\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A3 Disponibles sin datos de contacto",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/disponibles"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if (pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Arreglo público\", function () { const body=pm.response.json(); if(!Array.isArray(body) || body.some(row => Object.keys(row).sort().join(\",\") !== \"id,nombre\")) throw new Error(\"Lista inesperada\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A3 Crear cliente propio",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Cliente Postman A3\",\n  \"nit\": \"CF\",\n  \"telefono\": \"{{telefono_prueba}}\",\n  \"correo\": \"cliente@postman.test\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.variables.get(\"telefono_prueba\")) pm.variables.set(\"telefono_prueba\", \"9\" + String(Math.floor(Math.random()*10000000)).padStart(7,\"0\"));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 201\", function () { if (pm.response.code !== 201) throw new Error(\"Estado inesperado\"); });",
+              "const body = pm.response.json();",
+              "pm.test(\"Cliente público\", function () { if (Object.keys(body).sort().join(\",\") !== \"correo,id,nit,nombre,telefono\") throw new Error(\"Contrato de cliente inesperado\"); });",
+              "pm.variables.set(\"cliente_id\", body.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A3 Consultar cliente propio",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{cliente_id}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if (pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "const body = pm.response.json();",
+              "pm.test(\"Cliente público\", function () { if (Object.keys(body).sort().join(\",\") !== \"correo,id,nit,nombre,telefono\") throw new Error(\"Contrato de cliente inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A3 Editar solo el nombre",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{cliente_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Cliente Postman A3 editado\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if (pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "const body = pm.response.json();",
+              "pm.test(\"Cliente público\", function () { if (Object.keys(body).sort().join(\",\") !== \"correo,id,nit,nombre,telefono\") throw new Error(\"Contrato de cliente inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A3 Duplicado normalizado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Cliente duplicado\",\n  \"nit\": \"CF\",\n  \"telefono\": \"+502 {{telefono_prueba}}\",\n  \"correo\": \"cliente@postman.test\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 409\", function () { if (pm.response.code !== 409) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A3 Propietario enviado no se admite",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{cliente_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"vendedor_id\": 1\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if (pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"errores\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A3 NIT con verificador inválido",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{cliente_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nit\": \"45218170\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if (pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"errores\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A3 Inexistente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/9007199254740991"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 404\", function () { if (pm.response.code !== 404) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A3 Ficha disponible sigue siendo ajena",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{disponible_id}}"
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.variables.get(\"disponible_id\")) throw new Error(\"Configure disponible_id de un cliente de pruebas propio antes de ejecutar esta solicitud.\");"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 404\", function () { if (pm.response.code !== 404) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A3 Editar ajeno conserva 404 antes de validar JSON",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{disponible_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.variables.get(\"disponible_id\")) throw new Error(\"Configure disponible_id de un cliente de pruebas propio antes de ejecutar esta solicitud.\");"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 404\", function () { if (pm.response.code !== 404) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A3 Tomar disponible propio de prueba",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{disponible_id}}/tomar"
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.variables.get(\"disponible_id\")) throw new Error(\"Configure disponible_id de un cliente de pruebas propio antes de ejecutar esta solicitud.\");"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if (pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "const body = pm.response.json();",
+              "pm.test(\"Cliente público\", function () { if (Object.keys(body).sort().join(\",\") !== \"correo,id,nit,nombre,telefono\") throw new Error(\"Contrato de cliente inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A3 Ya tomado",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{disponible_id}}/tomar"
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.variables.get(\"disponible_id\")) throw new Error(\"Configure disponible_id de un cliente de pruebas propio antes de ejecutar esta solicitud.\");"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 409\", function () { if (pm.response.code !== 409) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A3 Login vendedor con diez clientes",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"correo\": \"{{correo_cupo}}\",\n  \"clave\": \"{{clave_publica}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.variables.get(\"correo_cupo\")) throw new Error(\"Configure correo_cupo de un vendedor de pruebas con diez clientes.\");"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if (pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "const body = pm.response.json();",
+              "pm.test(\"Login sin campos internos\", function () { if(Object.keys(body.usuario).sort().join(\",\") !== \"correo,id,nombre\") throw new Error(\"Usuario inesperado\"); });",
+              "pm.variables.set(\"token_cupo\", body.token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A3 Crear sin cupo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token_cupo}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Cliente Postman A3\",\n  \"nit\": \"CF\",\n  \"telefono\": \"99999998\",\n  \"correo\": \"cliente@postman.test\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 409\", function () { if (pm.response.code !== 409) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A3 Cartera sin token",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/clientes"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 401\", function () { if (pm.response.code !== 401) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Listado resumido",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades?etapa=prospecto"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Arreglo resumido\", function () { const b=pm.response.json(); if(!Array.isArray(b) || b.some(x => \"productos\" in x || \"historial\" in x)) throw new Error(\"Listado inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Crear prospecto",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"cliente_id\":{{cliente_id}},\"titulo\":\"Cotización Postman A4\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "for(const key of [\"cliente_id\",\"producto_prueba_id\",\"producto_minimo_id\",\"producto_inactivo_id\"]) if(!Number(pm.variables.get(key))) throw new Error(\"Prepare \" + key + \" exclusivamente en pruebas; consulte README.\");"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 201\", function () { if(pm.response.code !== 201) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Detalle público\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,etapa,fecha_cierre,historial,id,motivo_perdida,probabilidad,productos,titulo,total\" || typeof b.total !== \"number\" || !Array.isArray(b.productos) || !Array.isArray(b.historial) || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\") throw new Error(\"Detalle inesperado\"); });",
+              "pm.variables.set(\"oportunidad_id\",pm.response.json().id);",
+              "pm.test(\"Historial inicial\", function () { const b=pm.response.json(); if(b.etapa !== \"prospecto\" || b.historial.length !== 1 || b.historial[0].etapa_anterior !== null) throw new Error(\"Creación inesperada\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Consultar detalle",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Detalle público\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,etapa,fecha_cierre,historial,id,motivo_perdida,probabilidad,productos,titulo,total\" || typeof b.total !== \"number\" || !Array.isArray(b.productos) || !Array.isArray(b.historial) || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\") throw new Error(\"Detalle inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Editar título",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"  Cotización   revisada  \"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Detalle público\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,etapa,fecha_cierre,historial,id,motivo_perdida,probabilidad,productos,titulo,total\" || typeof b.total !== \"number\" || !Array.isArray(b.productos) || !Array.isArray(b.historial) || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\") throw new Error(\"Detalle inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Salto no permitido",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/etapa",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"etapa\": \"propuesta\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if(pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Errores por campo\", function () { if(!pm.response.json().errores) throw new Error(\"Errores ausentes\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Precio enviado rechazado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/productos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"producto_id\":{{producto_prueba_id}},\"cantidad\":1,\"precio_unitario\":0.01}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if(pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Errores por campo\", function () { if(!pm.response.json().errores) throw new Error(\"Errores ausentes\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Mínimo sector rechazado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/productos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"producto_id\":{{producto_minimo_id}},\"cantidad\":49}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if(pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Errores por campo\", function () { if(!pm.response.json().errores) throw new Error(\"Errores ausentes\"); });",
+              "pm.test(\"Error en cantidad\", function () { if(!pm.response.json().errores.cantidad) throw new Error(\"Error ausente\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Producto inactivo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/productos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"producto_id\":{{producto_inactivo_id}},\"cantidad\":1}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if(pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Errores por campo\", function () { if(!pm.response.json().errores) throw new Error(\"Errores ausentes\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Producto inexistente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/productos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"producto_id\": 999999999,\n  \"cantidad\": 1\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 404\", function () { if(pm.response.code !== 404) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Agregar mínimo sector",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/productos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"producto_id\":{{producto_minimo_id}},\"cantidad\":50}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 201\", function () { if(pm.response.code !== 201) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Detalle público\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,etapa,fecha_cierre,historial,id,motivo_perdida,probabilidad,productos,titulo,total\" || typeof b.total !== \"number\" || !Array.isArray(b.productos) || !Array.isArray(b.historial) || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\") throw new Error(\"Detalle inesperado\"); });",
+              "pm.variables.set(\"linea_id\",pm.response.json().productos[0].id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Producto repetido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/productos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"producto_id\":{{producto_minimo_id}},\"cantidad\":50}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 409\", function () { if(pm.response.code !== 409) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Edición inferior al mínimo",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/productos/{{linea_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cantidad\": 49\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if(pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Errores por campo\", function () { if(!pm.response.json().errores) throw new Error(\"Errores ausentes\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Editar cantidad válida",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/productos/{{linea_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cantidad\": 51\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Detalle público\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,etapa,fecha_cierre,historial,id,motivo_perdida,probabilidad,productos,titulo,total\" || typeof b.total !== \"number\" || !Array.isArray(b.productos) || !Array.isArray(b.historial) || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\") throw new Error(\"Detalle inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Quitar línea",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/productos/{{linea_id}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 204\", function () { if(pm.response.code !== 204) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Sin cuerpo\", function () { if(pm.response.text() !== \"\") throw new Error(\"Cuerpo inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Línea quitada inexistente",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/productos/{{linea_id}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 404\", function () { if(pm.response.code !== 404) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Agregar producto común",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/productos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"producto_id\":{{producto_prueba_id}},\"cantidad\":2}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 201\", function () { if(pm.response.code !== 201) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Detalle público\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,etapa,fecha_cierre,historial,id,motivo_perdida,probabilidad,productos,titulo,total\" || typeof b.total !== \"number\" || !Array.isArray(b.productos) || !Array.isArray(b.historial) || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\") throw new Error(\"Detalle inesperado\"); });",
+              "pm.variables.set(\"linea_id\",pm.response.json().productos[0].id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Avanzar calificado",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/etapa",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"etapa\": \"calificado\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Detalle público\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,etapa,fecha_cierre,historial,id,motivo_perdida,probabilidad,productos,titulo,total\" || typeof b.total !== \"number\" || !Array.isArray(b.productos) || !Array.isArray(b.historial) || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\") throw new Error(\"Detalle inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Etapa repetida",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/etapa",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"etapa\": \"calificado\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 409\", function () { if(pm.response.code !== 409) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Avanzar propuesta",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/etapa",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"etapa\": \"propuesta\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Detalle público\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,etapa,fecha_cierre,historial,id,motivo_perdida,probabilidad,productos,titulo,total\" || typeof b.total !== \"number\" || !Array.isArray(b.productos) || !Array.isArray(b.historial) || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\") throw new Error(\"Detalle inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Avanzar negociación",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/etapa",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"etapa\": \"negociacion\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Detalle público\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,etapa,fecha_cierre,historial,id,motivo_perdida,probabilidad,productos,titulo,total\" || typeof b.total !== \"number\" || !Array.isArray(b.productos) || !Array.isArray(b.historial) || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\") throw new Error(\"Detalle inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Ganar",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/etapa",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"etapa\": \"ganada\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Detalle público\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,etapa,fecha_cierre,historial,id,motivo_perdida,probabilidad,productos,titulo,total\" || typeof b.total !== \"number\" || !Array.isArray(b.productos) || !Array.isArray(b.historial) || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\") throw new Error(\"Detalle inesperado\"); });",
+              "pm.test(\"Cierre UTC e historial\", function () { const b=pm.response.json(); if(!b.fecha_cierre.endsWith(\"Z\") || b.historial.length !== 5 || b.fecha_cierre !== b.historial[4].fecha) throw new Error(\"Cierre inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Título cerrado",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"No debe cambiar\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 409\", function () { if(pm.response.code !== 409) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Línea cerrada",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/productos/{{linea_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cantidad\": 3\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 409\", function () { if(pm.response.code !== 409) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Eliminar línea cerrada",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/productos/{{linea_id}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 409\", function () { if(pm.response.code !== 409) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Etapa cerrada",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/etapa",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"etapa\": \"perdida\",\n  \"motivo_perdida\": \"No debe cambiar\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 409\", function () { if(pm.response.code !== 409) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Crear sin productos",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"cliente_id\":{{cliente_id}},\"titulo\":\"Sin productos Postman A4\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 201\", function () { if(pm.response.code !== 201) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Detalle público\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,etapa,fecha_cierre,historial,id,motivo_perdida,probabilidad,productos,titulo,total\" || typeof b.total !== \"number\" || !Array.isArray(b.productos) || !Array.isArray(b.historial) || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\") throw new Error(\"Detalle inesperado\"); });",
+              "pm.variables.set(\"oportunidad_id\",pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Sin productos avanzar calificado",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/etapa",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"etapa\": \"calificado\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Detalle público\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,etapa,fecha_cierre,historial,id,motivo_perdida,probabilidad,productos,titulo,total\" || typeof b.total !== \"number\" || !Array.isArray(b.productos) || !Array.isArray(b.historial) || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\") throw new Error(\"Detalle inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Sin productos avanzar propuesta",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/etapa",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"etapa\": \"propuesta\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Detalle público\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,etapa,fecha_cierre,historial,id,motivo_perdida,probabilidad,productos,titulo,total\" || typeof b.total !== \"number\" || !Array.isArray(b.productos) || !Array.isArray(b.historial) || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\") throw new Error(\"Detalle inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Sin productos avanzar negociacion",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/etapa",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"etapa\": \"negociacion\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Detalle público\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,etapa,fecha_cierre,historial,id,motivo_perdida,probabilidad,productos,titulo,total\" || typeof b.total !== \"number\" || !Array.isArray(b.productos) || !Array.isArray(b.historial) || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\") throw new Error(\"Detalle inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Ganar sin productos",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/etapa",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"etapa\": \"ganada\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if(pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Errores por campo\", function () { if(!pm.response.json().errores) throw new Error(\"Errores ausentes\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Pérdida sin motivo",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/etapa",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"etapa\": \"perdida\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if(pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Errores por campo\", function () { if(!pm.response.json().errores) throw new Error(\"Errores ausentes\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Perder con motivo",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/{{oportunidad_id}}/etapa",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"etapa\": \"perdida\",\n  \"motivo_perdida\": \"  Presupuesto   insuficiente  \"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Detalle público\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,etapa,fecha_cierre,historial,id,motivo_perdida,probabilidad,productos,titulo,total\" || typeof b.total !== \"number\" || !Array.isArray(b.productos) || !Array.isArray(b.historial) || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\") throw new Error(\"Detalle inesperado\"); });",
+              "pm.test(\"Motivo normalizado\", function () { if(pm.response.json().motivo_perdida !== \"Presupuesto insuficiente\") throw new Error(\"Motivo inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Sin token",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/oportunidades"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 401\", function () { if(pm.response.code !== 401) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Recurso inexistente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/999999999"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 404\", function () { if(pm.response.code !== 404) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Propietario enviado rechazado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"cliente_id\":{{cliente_id}},\"titulo\":\"No válido\",\"vendedor_id\":1}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if(pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Errores por campo\", function () { if(!pm.response.json().errores) throw new Error(\"Errores ausentes\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Filtro inválido",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades?etapa=inventada"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 400\", function () { if(pm.response.code !== 400) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 JSON ilegible",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades",
+        "body": {
+          "mode": "raw",
+          "raw": "{",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 400\", function () { if(pm.response.code !== 400) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Crear sin vencimiento",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{cliente_id}}/actividades",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipo\": \"llamada\",\n  \"descripcion\": \"Llamar al cliente\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if(!Number(pm.variables.get(\"cliente_id\"))) throw new Error(\"Configure cliente_id de su cartera exclusivamente en pruebas.\");"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 201\", function () { if(pm.response.code !== 201) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Actividad pública\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,completada,descripcion,id,tipo,vence_en,vencida\" || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\" || typeof b.completada !== \"boolean\" || typeof b.vencida !== \"boolean\") throw new Error(\"Actividad inesperada\"); });",
+              "pm.variables.set(\"actividad_id\",pm.response.json().id);",
+              "pm.test(\"Sin vencimiento\", function () { const b=pm.response.json(); if(b.vence_en !== null || b.completada || b.vencida) throw new Error(\"Estado inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Crear convirtiendo zona",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{cliente_id}}/actividades",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipo\": \"reunion\",\n  \"descripcion\": \"Revisar cotización\",\n  \"vence_en\": \"2030-01-15T09:00:00-06:00\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 201\", function () { if(pm.response.code !== 201) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Actividad pública\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,completada,descripcion,id,tipo,vence_en,vencida\" || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\" || typeof b.completada !== \"boolean\" || typeof b.vencida !== \"boolean\") throw new Error(\"Actividad inesperada\"); });",
+              "pm.test(\"UTC convertido\", function () { if(pm.response.json().vence_en !== \"2030-01-15T15:00:00.000Z\") throw new Error(\"Zona incorrecta\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Crear vencida",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{cliente_id}}/actividades",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipo\": \"tarea\",\n  \"descripcion\": \"Seguimiento pasado permitido\",\n  \"vence_en\": \"2000-01-01T00:00:00Z\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 201\", function () { if(pm.response.code !== 201) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Actividad pública\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,completada,descripcion,id,tipo,vence_en,vencida\" || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\" || typeof b.completada !== \"boolean\" || typeof b.vencida !== \"boolean\") throw new Error(\"Actividad inesperada\"); });",
+              "pm.variables.set(\"actividad_id\",pm.response.json().id);",
+              "pm.test(\"Pasada y pendiente\", function () { if(!pm.response.json().vencida) throw new Error(\"Vencida incorrecta\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Listar todas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/actividades"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Arreglo\", function () { if(!Array.isArray(pm.response.json())) throw new Error(\"Listado inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Listar pendientes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/actividades?estado=pendiente"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Arreglo\", function () { if(!Array.isArray(pm.response.json())) throw new Error(\"Listado inesperado\"); });",
+              "pm.test(\"Solo pendientes\", function () { if(pm.response.json().some(a=>a.completada)) throw new Error(\"Filtro incorrecto\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Completar",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/actividades/{{actividad_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"completada\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Actividad pública\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,completada,descripcion,id,tipo,vence_en,vencida\" || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\" || typeof b.completada !== \"boolean\" || typeof b.vencida !== \"boolean\") throw new Error(\"Actividad inesperada\"); });",
+              "pm.test(\"Completada no vencida\", function () { const b=pm.response.json(); if(!b.completada || b.vencida) throw new Error(\"Estado incorrecto\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Listar completadas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/actividades?estado=completada"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Arreglo\", function () { if(!Array.isArray(pm.response.json())) throw new Error(\"Listado inesperado\"); });",
+              "pm.test(\"Solo completadas\", function () { if(pm.response.json().some(a=>!a.completada)) throw new Error(\"Filtro incorrecto\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Volver pendiente",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/actividades/{{actividad_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"completada\": false\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Actividad pública\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cliente,completada,descripcion,id,tipo,vence_en,vencida\" || Object.keys(b.cliente).sort().join(\",\") !== \"id,nombre\" || typeof b.completada !== \"boolean\" || typeof b.vencida !== \"boolean\") throw new Error(\"Actividad inesperada\"); });",
+              "pm.test(\"Pendiente vencida\", function () { const b=pm.response.json(); if(b.completada || !b.vencida) throw new Error(\"Estado incorrecto\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Booleano estricto",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/actividades/{{actividad_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"completada\": \"true\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if(pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Errores por campo\", function () { if(!pm.response.json().errores) throw new Error(\"Errores ausentes\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Booleano obligatorio",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/actividades/{{actividad_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if(pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Errores por campo\", function () { if(!pm.response.json().errores) throw new Error(\"Errores ausentes\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Edición fuera del contrato",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/actividades/{{actividad_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"completada\": true,\n  \"descripcion\": \"No permitido\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if(pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Errores por campo\", function () { if(!pm.response.json().errores) throw new Error(\"Errores ausentes\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Tipo inválido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{cliente_id}}/actividades",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipo\": \"correo\",\n  \"descripcion\": \"No válido\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if(pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Errores por campo\", function () { if(!pm.response.json().errores) throw new Error(\"Errores ausentes\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Descripción vacía",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{cliente_id}}/actividades",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipo\": \"tarea\",\n  \"descripcion\": \"   \"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if(pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Errores por campo\", function () { if(!pm.response.json().errores) throw new Error(\"Errores ausentes\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Descripción larga",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{cliente_id}}/actividades",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipo\": \"tarea\",\n  \"descripcion\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if(pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Errores por campo\", function () { if(!pm.response.json().errores) throw new Error(\"Errores ausentes\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Autor enviado rechazado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{cliente_id}}/actividades",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipo\": \"tarea\",\n  \"descripcion\": \"No válido\",\n  \"vendedor_id\": 1\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if(pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Errores por campo\", function () { if(!pm.response.json().errores) throw new Error(\"Errores ausentes\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Fecha sin zona",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{cliente_id}}/actividades",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipo\": \"tarea\",\n  \"descripcion\": \"Fecha inválida\",\n  \"vence_en\": \"2030-01-15T09:00:00\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if(pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Errores por campo\", function () { if(!pm.response.json().errores) throw new Error(\"Errores ausentes\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Calendario inválido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{cliente_id}}/actividades",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipo\": \"tarea\",\n  \"descripcion\": \"Fecha inválida\",\n  \"vence_en\": \"2030-02-30T09:00:00Z\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if(pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Errores por campo\", function () { if(!pm.response.json().errores) throw new Error(\"Errores ausentes\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Fecha nula enviada",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{cliente_id}}/actividades",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipo\": \"tarea\",\n  \"descripcion\": \"Omita fecha para no vencer\",\n  \"vence_en\": null\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 422\", function () { if(pm.response.code !== 422) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Errores por campo\", function () { if(!pm.response.json().errores) throw new Error(\"Errores ausentes\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Filtro inválido",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/actividades?estado=todas"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 400\", function () { if(pm.response.code !== 400) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Filtro ajeno al contrato",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/actividades?vendedor_id=1"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 400\", function () { if(pm.response.code !== 400) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Cliente inexistente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/999999999/actividades",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipo\": \"tarea\",\n  \"descripcion\": \"No existe\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 404\", function () { if(pm.response.code !== 404) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Actividad inexistente",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/actividades/999999999",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"completada\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 404\", function () { if(pm.response.code !== 404) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 JSON ilegible",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/{{cliente_id}}/actividades",
+        "body": {
+          "mode": "raw",
+          "raw": "{",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 400\", function () { if(pm.response.code !== 400) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Sin token",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/actividades"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 401\", function () { if(pm.response.code !== 401) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A6 Resumen octubre",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/reportes/resumen?mes=2026-10"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Resumen exacto y numérico\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cartera,mes,pronostico,total,ventas\" || Object.keys(b.cartera).sort().join(\",\") !== \"clientes,maximo\" || [b.ventas,b.total,b.pronostico,b.cartera.clientes,b.cartera.maximo].some(x=>typeof x !== \"number\")) throw new Error(\"Resumen inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A6 Resumen noviembre",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/reportes/resumen?mes=2026-11"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Resumen exacto y numérico\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cartera,mes,pronostico,total,ventas\" || Object.keys(b.cartera).sort().join(\",\") !== \"clientes,maximo\" || [b.ventas,b.total,b.pronostico,b.cartera.clientes,b.cartera.maximo].some(x=>typeof x !== \"number\")) throw new Error(\"Resumen inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A6 Mes actual Guatemala",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/reportes/resumen"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 200\", function () { if(pm.response.code !== 200) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Resumen exacto y numérico\", function () { const b=pm.response.json(); if(Object.keys(b).sort().join(\",\") !== \"cartera,mes,pronostico,total,ventas\" || Object.keys(b.cartera).sort().join(\",\") !== \"clientes,maximo\" || [b.ventas,b.total,b.pronostico,b.cartera.clientes,b.cartera.maximo].some(x=>typeof x !== \"number\")) throw new Error(\"Resumen inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A6 Mes vacío",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/reportes/resumen?mes="
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 400\", function () { if(pm.response.code !== 400) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A6 Mes inválido",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/reportes/resumen?mes=2026-13"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 400\", function () { if(pm.response.code !== 400) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A6 Mes repetido",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/reportes/resumen?mes=2026-10&mes=2026-11"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 400\", function () { if(pm.response.code !== 400) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A6 Propietario no admitido",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/reportes/resumen?mes=2026-10&vendedor_id=1"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 400\", function () { if(pm.response.code !== 400) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A6 Formato incorrecto",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/reportes/resumen?mes=2026-1"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 400\", function () { if(pm.response.code !== 400) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A6 Sin token",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/reportes/resumen?mes=2026-10"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 401\", function () { if(pm.response.code !== 401) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A3 Ruta ilegible",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/clientes/%ZZ"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 400\", function () { if(pm.response.code !== 400) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A4 Ruta ilegible",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/oportunidades/%FF"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 400\", function () { if(pm.response.code !== 400) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A5 Ruta ilegible",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": "{{base_url}}/actividades/%ZZ"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 400\", function () { if(pm.response.code !== 400) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login cuerpo gzip ilegible",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Encoding",
+            "value": "gzip"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "no comprimido",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 400\", function () { if(pm.response.code !== 400) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login cuerpo deflate ilegible",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Encoding",
+            "value": "deflate"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "no comprimido",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 400\", function () { if(pm.response.code !== 400) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login correo local inexistente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"correo\": \"no-existe-a7@localhost\",\n  \"clave\": \"{{clave_publica}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 401\", function () { if(pm.response.code !== 401) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login correo entre comillas inexistente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"correo\": \"\\\"revision a7\\\"@example.test\",\n  \"clave\": \"{{clave_publica}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Estado 401\", function () { if(pm.response.code !== 401) throw new Error(\"Estado inesperado\"); });",
+              "pm.test(\"Error público\", function () { if(Object.keys(pm.response.json()).join(\",\") !== \"error\") throw new Error(\"Error inesperado\"); });"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test(\"JSON público: errores, tipos, UTC y privacidad\", function () {",
+          "  if (pm.response.code === 204) return;",
+          "  const body = pm.response.json();",
+          "  if (pm.response.code >= 400) {",
+          "    const key = pm.response.code === 422 ? \"errores\" : \"error\";",
+          "    if (Object.keys(body).join(\",\") !== key) throw new Error(\"Forma de error incorrecta\");",
+          "    if (key === \"errores\") {",
+          "      if (!body.errores || Object.values(body.errores).some(value => typeof value !== \"string\")) throw new Error(\"Errores por campo incorrectos\");",
+          "    } else if (typeof body.error !== \"string\") throw new Error(\"Mensaje incorrecto\");",
+          "    return;",
+          "  }",
+          "  const privateFields = [\"password\", \"clave\", \"password_confirmation\", \"remember_token\", \"hash\", \"vendedor_id\", \"user_id\", \"usuario_id\", \"supervisor_id\", \"rol\", \"sql\", \"sqlMessage\", \"stack\", \"trace\", \"DB_PASSWORD\", \"JWT_SECRET\"];",
+          "  const amounts = [\"precio\", \"precio_unitario\", \"subtotal\", \"total\", \"pronostico\", \"cantidad\", \"ventas\", \"probabilidad\", \"clientes\", \"maximo\"];",
+          "  function review(value) {",
+          "    if (!value || typeof value !== \"object\") return;",
+          "    for (const [key, data] of Object.entries(value)) {",
+          "      if (privateFields.includes(key)) throw new Error(\"Campo privado en respuesta\");",
+          "      if (amounts.includes(key) && (typeof data !== \"number\" || !Number.isFinite(data))) throw new Error(\"Importe o cantidad no numérico\");",
+          "      if ([\"fecha\", \"fecha_cierre\", \"vence_en\"].includes(key) && data !== null && (typeof data !== \"string\" || !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$/.test(data) || !Number.isFinite(Date.parse(data)))) throw new Error(\"Fecha sin formato UTC\");",
+          "      if ([\"completada\", \"vencida\"].includes(key) && typeof data !== \"boolean\") throw new Error(\"Booleano incorrecto\");",
+          "      review(data);",
+          "    }",
+          "  }",
+          "  review(body);",
+          "});"
+        ]
+      }
+    }
+  ]
+}
