@@ -43,10 +43,13 @@ function renderList(container, state) {
   if (!state.loading && !state.listError) {
     const board = content.querySelector('[data-op-board]');
     for (const stage of ['prospecto', 'calificado', 'propuesta', 'negociacion']) {
-      const column = node('section', '', 'col-12 col-md-6 col-xl-3'); column.dataset.boardStage = stage;
-      const panel = node('div', '', 'bg-body-tertiary rounded-3 p-3 h-100'); panel.append(node('h3', stageNames[stage], 'h6'));
       const rows = state.items.filter(row => row.etapa === stage);
-      if (!rows.length) panel.append(node('p', 'Sin oportunidades.', 'small text-body-secondary'));
+      const column = node('section', '', 'op-stage-column col-12 col-md-6 col-xl-3'); column.dataset.boardStage = stage;
+      const panel = node('div', '', `op-stage-panel stage-${stage} rounded-3 p-3 h-100`);
+      const heading = node('div', '', 'op-stage-heading d-flex align-items-center justify-content-between gap-2');
+      heading.append(node('h3', stageNames[stage], 'h6 mb-0'), node('span', String(rows.length), 'op-stage-count badge rounded-pill'));
+      panel.append(heading);
+      if (!rows.length) panel.append(node('p', 'Sin oportunidades.', 'small text-body-secondary mb-0 mt-3'));
       for (const row of rows) panel.append(summary(row));
       column.append(panel); board.append(column);
     }
@@ -57,9 +60,9 @@ function renderList(container, state) {
   container.append(content);
 }
 function summary(row) {
-  const card = node('article', '', 'bg-white border rounded-3 p-3 mb-3 text-break');
-  card.append(node('h4', row.titulo, 'h6'), node('p', row.cliente.nombre, 'small mb-1'), node('p', `${stageNames[row.etapa]} · ${row.probabilidad}%`, 'small mb-1'), node('p', money(row.total), 'fw-semibold mb-1'), node('p', 'Cierre: ' + date(row.fecha_cierre), 'small mb-2'));
-  if (row.motivo_perdida) card.append(node('p', 'Motivo: ' + row.motivo_perdida, 'small'));
+  const card = node('article', '', `opportunity-card stage-${row.etapa} bg-white border rounded-3 p-3 mb-3 text-break`);
+  card.append(node('h4', row.titulo, 'h6 mb-2'), node('p', row.cliente.nombre, 'opportunity-client small mb-2'), node('p', `${stageNames[row.etapa]} · ${row.probabilidad}%`, `stage-badge stage-${row.etapa} small mb-2`), node('p', money(row.total), 'opportunity-amount fw-semibold mb-1'), node('p', 'Cierre: ' + date(row.fecha_cierre), 'small text-body-secondary mb-2'));
+  if (row.motivo_perdida) card.append(node('p', 'Motivo: ' + row.motivo_perdida, 'opportunity-reason small'));
   card.append(action('Ver oportunidad', 'detail', row.id)); return card;
 }
 function choicesMessage(content, state) {
@@ -78,6 +81,7 @@ function renderDetail(container, state) {
   content.querySelector('[data-op-title]').textContent = opportunity.titulo;
   content.querySelector('[data-op-client]').textContent = opportunity.cliente.nombre;
   content.querySelector('[data-op-stage]').textContent = stageNames[opportunity.etapa] + ' · ' + opportunity.probabilidad + '%';
+  content.querySelector('[data-op-stage]').className = `stage-badge stage-${opportunity.etapa} mb-2`;
   content.querySelector('[data-op-total]').textContent = money(opportunity.total);
   content.querySelector('[data-op-closing]').textContent = 'Cierre (Guatemala): ' + date(opportunity.fecha_cierre);
   content.querySelector('[data-op-reason]').textContent = opportunity.motivo_perdida || '';
@@ -85,8 +89,10 @@ function renderDetail(container, state) {
   const title = content.querySelector('#op-title-form'); title.hidden = closed; title.elements.titulo.value = state.title; fieldErrors(title, state, 'title');
   const lines = content.querySelector('[data-op-lines]');
   for (const line of opportunity.productos) {
-    const item = node('article', '', 'border rounded-3 p-3 mb-3 text-break'); item.dataset.lineId = line.id;
-    item.append(node('h4', line.nombre, 'h6'), node('p', `Precio cotizado: ${money(line.precio_unitario)} · Cantidad: ${line.cantidad}`, 'small mb-1'), node('p', 'Subtotal: ' + money(line.subtotal), 'fw-semibold'));
+    const item = node('article', '', 'quote-line border rounded-3 p-3 mb-3 text-break'); item.dataset.lineId = line.id;
+    const details = node('div', '', 'quote-line-details');
+    details.append(node('p', 'Precio cotizado', 'quote-line-label small mb-0'), node('p', money(line.precio_unitario), 'mb-0'), node('p', 'Cantidad', 'quote-line-label small mb-0'), node('p', String(line.cantidad), 'mb-0'));
+    item.append(node('h4', line.nombre, 'h6 mb-3'), details, node('p', 'Subtotal: ' + money(line.subtotal), 'quote-line-subtotal fw-semibold mb-0'));
     if (!closed) {
       const form = template('op-line-form'); form.querySelector('form').dataset.lineId = line.id;
       const input = form.querySelector('input'); input.id = 'op-quantity-' + line.id; input.value = state.quantities[line.id];
@@ -108,6 +114,6 @@ function renderDetail(container, state) {
   content.querySelector('[data-close-confirmation]').hidden = !state.confirming;
   content.querySelector('[data-confirm-stage]').textContent = 'Confirme el cierre como ' + (stageNames[state.stage.etapa] || '').toLowerCase() + '. La oportunidad quedará en modo consulta.';
   const history = content.querySelector('[data-op-history]');
-  for (const entry of opportunity.historial) history.append(node('li', `${date(entry.fecha)} · ${stageNames[entry.etapa_anterior] || 'Inicio'} → ${stageNames[entry.etapa_nueva]} · ${entry.usuario}`, 'mb-2 text-break'));
+  for (const entry of opportunity.historial) history.append(node('li', `${date(entry.fecha)} · ${stageNames[entry.etapa_anterior] || 'Inicio'} → ${stageNames[entry.etapa_nueva]} · ${entry.usuario}`, 'history-entry mb-2 text-break'));
   container.append(content);
 }

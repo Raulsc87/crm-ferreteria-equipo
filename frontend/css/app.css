@@ -344,6 +344,250 @@ textarea.form-control {
   padding-top: 0.35rem;
 }
 
+.module-actions {
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--crm-gray-300);
+}
+
+.op-stage-panel {
+  min-width: 0;
+  background: var(--crm-gray-050);
+  border: 1px solid var(--crm-gray-300);
+  border-top-width: 0.3rem;
+}
+
+.op-stage-panel.stage-prospecto {
+  border-top-color: #2f6f9f;
+}
+
+.op-stage-panel.stage-calificado {
+  border-top-color: #72539a;
+}
+
+.op-stage-panel.stage-propuesta {
+  border-top-color: #b56b09;
+}
+
+.op-stage-panel.stage-negociacion {
+  border-top-color: #9b4b20;
+}
+
+.op-stage-heading {
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--crm-gray-300);
+}
+
+.op-stage-count {
+  color: var(--crm-navy-800);
+  background: var(--crm-navy-100);
+}
+
+.opportunity-card {
+  position: relative;
+  margin-top: 0.8rem;
+  border-left-width: 0.3rem !important;
+  box-shadow: 0 0.18rem 0.55rem rgba(16, 42, 67, 0.07);
+}
+
+.opportunity-card.stage-prospecto {
+  border-left-color: #2f6f9f !important;
+}
+
+.opportunity-card.stage-calificado {
+  border-left-color: #72539a !important;
+}
+
+.opportunity-card.stage-propuesta {
+  border-left-color: #b56b09 !important;
+}
+
+.opportunity-card.stage-negociacion {
+  border-left-color: #9b4b20 !important;
+}
+
+.opportunity-card.stage-ganada {
+  border-left-color: #2f7d4c !important;
+}
+
+.opportunity-card.stage-perdida {
+  border-left-color: #a63b46 !important;
+}
+
+.opportunity-client {
+  color: var(--crm-muted);
+}
+
+.opportunity-amount {
+  color: var(--crm-navy-900);
+  font-size: 1.12rem;
+}
+
+.opportunity-reason {
+  padding: 0.55rem;
+  color: #74202a;
+  background: #fbeaec;
+  border-radius: 0.4rem;
+}
+
+.stage-badge {
+  display: inline-flex;
+  width: fit-content;
+  padding: 0.28rem 0.55rem;
+  font-weight: 700;
+  border-radius: 999px;
+}
+
+.stage-badge.stage-prospecto {
+  color: #164a70;
+  background: #dcecf7;
+}
+
+.stage-badge.stage-calificado {
+  color: #543b78;
+  background: #ece4f5;
+}
+
+.stage-badge.stage-propuesta {
+  color: #704200;
+  background: #fff0d5;
+}
+
+.stage-badge.stage-negociacion {
+  color: #733613;
+  background: #f9e3d6;
+}
+
+.stage-badge.stage-ganada {
+  color: #1f5d38;
+  background: #dff2e6;
+}
+
+.stage-badge.stage-perdida {
+  color: #7f2630;
+  background: #f8dfe2;
+}
+
+.closed-opportunities {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--crm-gray-300);
+}
+
+.closed-opportunities-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.closed-opportunities-grid .opportunity-card {
+  margin: 0;
+}
+
+.op-detail-header {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: var(--crm-navy-100);
+  border-left: 0.3rem solid var(--crm-navy-800);
+  border-radius: var(--crm-radius);
+}
+
+.quote-section,
+.history-section {
+  margin-block: 1.2rem;
+}
+
+.quote-line {
+  max-width: 50rem;
+  background: #fff;
+  box-shadow: 0 0.15rem 0.45rem rgba(16, 42, 67, 0.05);
+}
+
+.quote-line-details {
+  display: grid;
+  grid-template-columns: max-content 1fr max-content 1fr;
+  gap: 0.2rem 0.65rem;
+  align-items: baseline;
+}
+
+.quote-line-label {
+  color: var(--crm-muted);
+  font-weight: 650;
+}
+
+.quote-line-subtotal {
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  color: var(--crm-navy-900);
+  border-top: 1px solid var(--crm-gray-300);
+}
+
+.quote-line [data-op-line-form] {
+  max-width: 22rem;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed var(--crm-gray-300);
+}
+
+.quote-total {
+  max-width: 50rem;
+  padding: 0.9rem 1rem;
+  color: #fff;
+  background: var(--crm-navy-900);
+  border-radius: 0.65rem;
+}
+
+.quote-total span {
+  color: #ffd7bd;
+}
+
+.quote-form,
+.stage-form {
+  padding: 1rem !important;
+  background: var(--crm-gray-050);
+  border-color: var(--crm-gray-300) !important;
+}
+
+.stage-form {
+  border-left: 0.3rem solid var(--crm-navy-700);
+}
+
+.close-confirmation {
+  max-width: 46rem;
+  border-left: 0.35rem solid #c37800;
+}
+
+.history-list {
+  max-width: 50rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: history;
+}
+
+.history-entry {
+  position: relative;
+  padding: 0.7rem 0.8rem 0.7rem 2.5rem;
+  background: var(--crm-gray-050);
+  border-left: 0.2rem solid var(--crm-gray-300);
+  border-radius: 0.35rem;
+  counter-increment: history;
+}
+
+.history-entry::before {
+  position: absolute;
+  top: 0.65rem;
+  left: 0.65rem;
+  display: grid;
+  width: 1.25rem;
+  height: 1.25rem;
+  place-items: center;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  content: counter(history);
+  background: var(--crm-navy-700);
+  border-radius: 50%;
+}
+
 @media (max-width: 575.98px) {
   .app-header .container,
   .seller-profile {
@@ -387,5 +631,22 @@ textarea.form-control {
 
   .client-list-item .client-row-action {
     margin-top: 0.15rem;
+  }
+
+  .module-actions .btn,
+  .close-confirmation .btn {
+    flex: 1 1 100%;
+  }
+
+  .closed-opportunities-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .quote-line-details {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .quote-line-label {
+    margin-top: 0.35rem;
   }
 }

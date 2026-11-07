@@ -169,7 +169,7 @@
     </div>
   </template>
   <template id="opportunities-view">
-    <div class="d-flex flex-wrap gap-2 mb-4">
+    <div class="module-actions d-flex flex-wrap gap-2 mb-4">
       <button type="button" class="btn btn-outline-success" data-op-action="list">Volver al embudo</button>
       <button type="button" class="btn btn-success" data-op-action="create">Crear oportunidad</button>
     </div>
@@ -179,47 +179,58 @@
     <div data-op-body></div>
   </template>
   <template id="opportunities-list">
-    <form id="op-filter-form" class="row g-2 mb-4">
+    <form id="op-filter-form" class="compact-form row g-2 mb-4">
       <div class="col-12 col-md-8"><label for="op-filter" class="form-label">Filtrar por etapa</label><select id="op-filter" name="etapa" class="form-select"></select></div>
       <div class="col-12 col-md-auto d-flex align-items-end"><button type="submit" class="btn btn-success">Aplicar filtro</button></div>
     </form>
     <p data-op-list-message role="status" hidden></p>
     <div data-op-board class="row g-3 mb-4" aria-label="Etapas abiertas"></div>
-    <h3 class="h5">Oportunidades cerradas</h3><div data-op-closed></div>
+    <section class="closed-opportunities" aria-labelledby="closed-opportunities-title">
+      <h3 id="closed-opportunities-title" class="module-heading h5">Oportunidades cerradas</h3>
+      <div data-op-closed class="closed-opportunities-grid"></div>
+    </section>
   </template>
   <template id="opportunity-create">
-    <h3 class="h5">Crear oportunidad</h3>
+    <div class="form-panel compact-form">
+    <h3 class="module-heading h5">Crear oportunidad</h3>
     <p data-op-choices-message role="status" hidden></p>
     <form id="op-create-form" class="row g-3" novalidate>
       <div class="col-12"><label for="op-client" class="form-label">Cliente de su cartera</label><select id="op-client" name="cliente_id" class="form-select" aria-describedby="op-client-error"></select><div id="op-client-error" data-op-error="cliente_id" class="invalid-feedback" hidden></div></div>
       <div class="col-12"><label for="op-create-title" class="form-label">Título</label><input id="op-create-title" name="titulo" class="form-control" maxlength="150" aria-describedby="op-create-title-error"><div id="op-create-title-error" data-op-error="titulo" class="invalid-feedback" hidden></div></div>
       <div class="col-12"><button type="submit" class="btn btn-success">Guardar oportunidad</button></div>
     </form>
+    </div>
   </template>
   <template id="opportunity-detail">
-    <h3 data-op-title class="h4 text-break"></h3>
-    <p class="mb-1">Cliente: <span data-op-client></span></p><p data-op-stage></p>
-    <p data-op-closing class="small text-body-secondary"></p><p data-op-reason></p>
+    <div class="op-detail-header">
+      <h3 data-op-title class="h4 text-break"></h3>
+      <p class="mb-1">Cliente: <strong data-op-client></strong></p><p data-op-stage></p>
+      <p data-op-closing class="small text-body-secondary mb-1"></p><p data-op-reason class="mb-0"></p>
+    </div>
     <p data-op-readonly class="alert alert-info" hidden>Oportunidad cerrada: solo consulta. Se conserva su crédito histórico aunque el cliente cambie de vendedor. El cliente puede estar fuera de su cartera actual.</p>
-    <form id="op-title-form" class="row g-2 mb-4" novalidate>
+    <form id="op-title-form" class="compact-form row g-2 mb-4" novalidate>
       <div class="col-12"><label for="op-title" class="form-label">Editar título</label><input id="op-title" name="titulo" maxlength="150" class="form-control" aria-describedby="op-title-error"><div id="op-title-error" data-op-error="titulo" class="invalid-feedback" hidden></div></div>
       <div class="col-12"><button type="submit" class="btn btn-outline-success">Guardar título</button></div>
     </form>
-    <h4 class="h5">Productos cotizados</h4><div data-op-lines></div>
-    <p class="fs-5 fw-semibold">Total: <span data-op-total></span></p>
+    <section class="quote-section" aria-labelledby="quote-products-title">
+      <h4 id="quote-products-title" class="module-heading h5">Productos cotizados</h4><div data-op-lines class="quote-lines"></div>
+      <p class="quote-total fs-5 fw-semibold">Total cotizado: <span data-op-total></span></p>
+    </section>
     <p data-op-choices-message role="status" hidden></p>
-    <form id="op-add-form" class="row g-3 mb-4 border rounded-3 p-3" novalidate>
+    <form id="op-add-form" class="quote-form compact-form row g-3 mb-4 border rounded-3 p-3" novalidate>
       <div class="col-12"><h4 class="h6">Agregar producto</h4><p class="small text-body-secondary">La API copia el precio vigente y valida la cantidad mínima. El precio cotizado se conserva aunque cambie el catálogo.</p><label for="op-product" class="form-label">Producto activo</label><select id="op-product" name="producto_id" class="form-select" aria-describedby="op-product-error"></select><div id="op-product-error" data-op-error="producto_id" class="invalid-feedback" hidden></div></div>
       <div class="col-12 col-md-6"><label for="op-add-quantity" class="form-label">Cantidad (1–999)</label><input id="op-add-quantity" name="cantidad" type="number" min="1" max="999" step="1" class="form-control" aria-describedby="op-add-quantity-error"><div id="op-add-quantity-error" data-op-error="cantidad" class="invalid-feedback" hidden></div></div>
       <div class="col-12"><button type="submit" class="btn btn-success">Agregar producto</button></div>
     </form>
-    <form id="op-stage-form" class="row g-3 mb-4" novalidate>
+    <form id="op-stage-form" class="stage-form compact-form row g-3 mb-4" novalidate>
       <div class="col-12"><h4 class="h5">Cambiar etapa</h4><label for="op-next-stage" class="form-label">Etapa destino</label><select id="op-next-stage" name="etapa" class="form-select" aria-describedby="op-stage-error"></select><div id="op-stage-error" data-op-error="etapa" class="invalid-feedback" hidden></div></div>
       <div data-loss-reason class="col-12" hidden><label for="op-loss-reason" class="form-label">Motivo de pérdida</label><textarea id="op-loss-reason" name="motivo_perdida" maxlength="255" class="form-control" aria-describedby="op-loss-error"></textarea><div id="op-loss-error" data-op-error="motivo_perdida" class="invalid-feedback" hidden></div></div>
       <div class="col-12"><button type="submit" class="btn btn-outline-success">Solicitar cambio de etapa</button></div>
     </form>
-    <section data-close-confirmation class="alert alert-warning" aria-label="Confirmar cierre" hidden><p data-confirm-stage></p><div class="d-flex flex-wrap gap-2"><button type="button" data-op-action="confirm-stage" class="btn btn-danger">Confirmar cierre</button><button type="button" data-op-action="cancel-stage" class="btn btn-outline-secondary">Cancelar cierre</button></div></section>
-    <h4 class="h5">Historial (hora de Guatemala)</h4><ol data-op-history class="small"></ol>
+    <section data-close-confirmation class="close-confirmation alert alert-warning" aria-label="Confirmar cierre" hidden><p data-confirm-stage></p><div class="d-flex flex-wrap gap-2"><button type="button" data-op-action="confirm-stage" class="btn btn-danger">Confirmar cierre</button><button type="button" data-op-action="cancel-stage" class="btn btn-outline-secondary">Cancelar cierre</button></div></section>
+    <section class="history-section" aria-labelledby="op-history-title">
+      <h4 id="op-history-title" class="module-heading h5">Historial (hora de Guatemala)</h4><ol data-op-history class="history-list small"></ol>
+    </section>
   </template>
   <template id="op-line-form">
     <form data-op-line-form class="row g-2" novalidate>
