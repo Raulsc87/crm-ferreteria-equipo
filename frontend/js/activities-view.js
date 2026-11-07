@@ -29,17 +29,19 @@ export function renderActivities(container, state) {
   const list = content.querySelector('[data-activity-list]');
   if (!state.loading && !state.listError) for (const row of state.items) {
     const item = document.createElement('article'); item.dataset.activityId = row.id;
-    item.className = 'card mb-3 text-break ' + (row.vencida ? 'border-danger' : '');
+    const visualState = row.completada ? 'activity-completed' : row.vencida ? 'activity-overdue' : 'activity-pending';
+    item.className = `activity-card ${visualState} card mb-3 text-break`;
     const body = document.createElement('div'); body.className = 'card-body';
-    const title = document.createElement('h3'); title.className = 'h6'; title.textContent = activityTypes[row.tipo] + ' · ' + row.cliente.nombre;
-    const description = document.createElement('p'); description.textContent = row.descripcion;
-    const deadline = document.createElement('p'); deadline.className = 'small text-body-secondary'; deadline.textContent = 'Vencimiento (Guatemala): ' + formatDeadline(row.vence_en);
-    const status = document.createElement('p'); status.dataset.activityState = ''; status.className = row.vencida ? 'fw-semibold text-danger' : 'fw-semibold';
+    const header = document.createElement('div'); header.className = 'activity-card-header d-flex flex-wrap align-items-start justify-content-between gap-2';
+    const title = document.createElement('h3'); title.className = 'h6 mb-0'; title.textContent = activityTypes[row.tipo] + ' · ' + row.cliente.nombre;
+    const description = document.createElement('p'); description.className = 'activity-description'; description.textContent = row.descripcion;
+    const deadline = document.createElement('p'); deadline.className = 'activity-deadline small text-body-secondary'; deadline.textContent = 'Vencimiento (Guatemala): ' + formatDeadline(row.vence_en);
+    const status = document.createElement('p'); status.dataset.activityState = ''; status.className = `activity-status-badge ${visualState} small fw-semibold mb-0`;
     status.textContent = row.completada ? 'Completada' : row.vencida ? 'Pendiente · Vencida' : 'Pendiente';
     const button = document.createElement('button'); button.type = 'button'; button.className = 'btn btn-outline-success btn-sm';
     button.dataset.activityAction = 'toggle'; button.dataset.id = row.id; button.disabled = Boolean(state.busy);
     button.textContent = state.busy === 'toggle-' + row.id ? 'Guardando…' : row.completada ? 'Marcar como pendiente' : 'Marcar como completada';
-    body.append(title, description, deadline, status, button); item.append(body); list.append(item);
+    header.append(title, status); body.append(header, description, deadline, button); item.append(body); list.append(item);
   }
   if (state.busy) for (const control of content.querySelectorAll('button, select')) control.disabled = true;
   container.replaceChildren(content);

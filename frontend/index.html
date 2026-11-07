@@ -239,7 +239,7 @@
     </form>
   </template>
   <template id="activity-create">
-    <section class="border rounded-3 p-3" aria-labelledby="activity-create-heading">
+    <section class="activity-form-panel form-panel compact-form" aria-labelledby="activity-create-heading">
       <h3 id="activity-create-heading" class="h5">Registrar actividad de seguimiento</h3>
       <p class="small text-body-secondary">Ingrese el vencimiento en hora de Guatemala (America/Guatemala), aunque su equipo esté en otra zona. Puede dejarlo vacío o indicar una fecha pasada.</p>
       <p data-activity-form-error class="alert alert-danger" role="alert" hidden></p>
@@ -253,8 +253,8 @@
     </section>
   </template>
   <template id="activities-view">
-    <p class="text-body-secondary">Registre nuevas actividades desde el detalle del cliente en Mi cartera.</p>
-    <form id="activity-filter-form" class="row g-2 mb-4">
+    <p class="activity-intro text-body-secondary">Registre nuevas actividades desde el detalle del cliente en Mi cartera.</p>
+    <form id="activity-filter-form" class="compact-form row g-2 mb-4">
       <div class="col-12 col-md-8"><label for="activity-filter" class="form-label">Filtrar actividades</label><select id="activity-filter" name="estado" class="form-select"><option value="">Todas</option><option value="pendiente">Pendientes</option><option value="completada">Completadas</option></select></div>
       <div class="col-12 col-md-auto d-flex align-items-end"><button type="submit" class="btn btn-success">Actualizar lista</button></div>
     </form>
@@ -265,20 +265,20 @@
     <div data-activity-list></div>
   </template>
   <template id="summary-view">
-    <form id="summary-form" class="row g-2 mb-4" novalidate>
+    <form id="summary-form" class="compact-form row g-2 mb-4" novalidate>
       <div class="col-12 col-md-8"><label for="summary-month" class="form-label">Mes de Guatemala</label><input id="summary-month" name="mes" type="month" min="1000-01" max="9998-12" class="form-control" required></div>
       <div class="col-12 col-md-auto d-flex align-items-end"><button type="submit" class="btn btn-success">Actualizar resumen</button></div>
     </form>
-    <p class="text-body-secondary">Ventas y total vendido corresponden al mes seleccionado en Guatemala. El pronóstico incluye todas sus oportunidades abiertas, sin filtro mensual. La cartera muestra sus clientes asignados actualmente.</p>
+    <p class="summary-intro text-body-secondary">Ventas y total vendido corresponden al mes seleccionado en Guatemala. El pronóstico incluye todas sus oportunidades abiertas, sin filtro mensual. La cartera muestra sus clientes asignados actualmente.</p>
     <p data-summary-status role="status" hidden></p>
     <p data-summary-error class="alert alert-danger" role="alert" hidden></p>
     <section data-summary-results hidden aria-label="Resultados del resumen">
-      <h3 data-summary-month class="h5 mb-3"></h3>
-      <div class="row g-3">
-        <div class="col-12 col-md-6"><div class="border rounded-3 p-4 h-100"><h4 class="h6">Ventas ganadas del mes</h4><p data-summary-sales class="fs-3 fw-semibold mb-0"></p></div></div>
-        <div class="col-12 col-md-6"><div class="border rounded-3 p-4 h-100"><h4 class="h6">Total vendido del mes</h4><p data-summary-total class="fs-3 fw-semibold mb-0"></p></div></div>
-        <div class="col-12 col-md-6"><div class="border rounded-3 p-4 h-100"><h4 class="h6">Pronóstico de oportunidades abiertas</h4><p data-summary-forecast class="fs-3 fw-semibold mb-0"></p></div></div>
-        <div class="col-12 col-md-6"><div class="border rounded-3 p-4 h-100"><h4 class="h6">Cartera actual: clientes / máximo</h4><p data-summary-capacity class="fs-3 fw-semibold mb-0"></p></div></div>
+      <h3 data-summary-month class="summary-month module-heading h5 mb-3"></h3>
+      <div class="summary-grid row g-3">
+        <div class="col-12 col-md-6"><article class="summary-card summary-card-sales border rounded-3 p-4 h-100"><h4 class="h6">Ventas ganadas del mes</h4><p data-summary-sales class="summary-value fs-3 fw-semibold mb-0"></p></article></div>
+        <div class="col-12 col-md-6"><article class="summary-card summary-card-total border rounded-3 p-4 h-100"><h4 class="h6">Total vendido del mes</h4><p data-summary-total class="summary-value fs-3 fw-semibold mb-0"></p></article></div>
+        <div class="col-12 col-md-6"><article class="summary-card summary-card-forecast border rounded-3 p-4 h-100"><h4 class="h6">Pronóstico de oportunidades abiertas</h4><p data-summary-forecast class="summary-value fs-3 fw-semibold mb-0"></p></article></div>
+        <div class="col-12 col-md-6"><article class="summary-card summary-card-capacity border rounded-3 p-4 h-100"><h4 class="h6">Cartera actual: clientes / máximo</h4><p data-summary-capacity class="summary-value fs-3 fw-semibold mb-0"></p></article></div>
       </div>
     </section>
   </template>
