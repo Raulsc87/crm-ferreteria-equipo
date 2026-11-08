@@ -6,11 +6,87 @@ Actualizado: 7 de noviembre de 2026. Estados: **histórico aprobado**, **registr
 
 La mayor parte de las pruebas se ejecutó en [Raulsc87/crm-ferreteria](https://github.com/Raulsc87/crm-ferreteria), hasta [033a51e](https://github.com/Raulsc87/crm-ferreteria/commit/033a51e6cb570b9909fe143597bad8bc05da2044), antes de importar los archivos. Las referencias históricas se conservan mediante enlaces a ese repositorio; esos commits y spec-v1 no existen en el historial nuevo.
 
-El rediseño pertenece a [PR #1](https://github.com/Raulsc87/crm-ferreteria-equipo/pull/1), rama frontend-diego hasta f510413. Hoy revision-raul incluye sus seis commits y los tres de importación de Raúl, sin integrar el PR. No había cambios locales sin guardar.
+El rediseño pertenece a [PR #1](https://github.com/Raulsc87/crm-ferreteria-equipo/pull/1), rama frontend-diego hasta f510413. revision-raul conserva esos nueve commits y b69df52 documental, sin integrar el PR. No había cambios locales sin guardar.
 
-Esta etapa prepara la ejecución y reduce documentos; **no repite suites ni acredita integración del rediseño**. El [anexo](anexo-evidencias.md) resume la historia necesaria, sin copiar los registros repetitivos.
+La preparación documental anterior quedó guardada en b69df52. Esta verificación añade pruebas nuevas de la versión combinada, descritas abajo, sin reinterpretar como nuevas las evidencias del original. El [anexo](anexo-evidencias.md) conserva la historia necesaria.
 
-## Comprobaciones de hoy: preparación, no pruebas funcionales
+## Verificación combinada — 7 de noviembre de 2026
+
+**Nueva ejecución en este repositorio:** revision-raul, referencia b69df529b7a7493ac66a2472a788292fbb8d4242, con el frontend de Diego hasta f510413. Ejecutó Codex por solicitud de Raúl; no es una revisión manual de la pareja.
+
+### Preparación y resultados
+
+Se detuvieron solo los tres servidores de revisión iniciados por el agente para liberar puertos. Las dependencias ya estaban instaladas. Se prepararon únicamente los perfiles locales A6 ausentes, reutilizando la configuración existente sin sobrescribir archivos ni mostrar secretos. No se creó, migró o sembró ninguna base.
+
+Antes de escribir, SELECT DATABASE()/CURRENT_USER()/SHOW GRANTS y huellas completas identificaron las tres bases existentes. API/panel de integración usan crm_ferreteria_test en 3306, con cuentas técnicas independientes y CORS exacto http://127.0.0.1:5500. A6 se usa solo para login/lecturas. Los ejecutores vuelven a comprobar destino y permisos antes de sus fixtures y limpieza.
+
+| Caso actual | Archivo o conjunto | Resultado |
+| --- | --- | --- |
+| COM-01 unidades | client, clients, opportunities, activities y summary .test.mjs | 43/43 aprobadas |
+| COM-02 diseño autónomo | design-browser.test.mjs, API simulada sin MySQL | 1/1; nueve pantallas a 1280/375 px |
+| COM-03 frontend real | browser.test.mjs y sus auxiliares de cartera/cotizaciones/actividades | 1/1; API Express y MySQL reales |
+| COM-04 integración | integration-browser.test.mjs, panel Blade con CSRF y sesiones separadas + API + SPA | 1/1 |
+| COM-05 controles comunes | summary-browser.test.mjs, A6 solo VerificacionSeeder y lectura | 1/1; cuatro controles coinciden |
+
+Son **47 casos distintos**: 43 unidades, uno visual simulado y tres recorridos reales con múltiples comprobaciones. Se ejecutaron en dos comandos, sin sumar repeticiones. No hubo fallos ni necesidad de corregir código o repetir casos. No se inventa un error de IA para esta etapa.
+
+Desde la raíz, con puertos libres:
+
+```powershell
+$env:DESIGN_KEEP_SCREENSHOTS='1'
+node --test --test-concurrency=1 frontend/tests/client.test.mjs frontend/tests/clients.test.mjs frontend/tests/opportunities.test.mjs frontend/tests/activities.test.mjs frontend/tests/summary.test.mjs frontend/tests/design-browser.test.mjs
+```
+
+```powershell
+$env:SPA_KEEP_SCREENSHOTS='1'
+node --test --test-concurrency=1 frontend/tests/browser.test.mjs frontend/tests/summary-browser.test.mjs frontend/tests/integration-browser.test.mjs
+```
+
+Las variables KEEP conservan solo perfiles/capturas propios para inspección posterior; se retiraron los cuatro directorios exactos de esta ejecución tras revisarlos. No se incorporan capturas, cookies, tokens o perfiles al repositorio.
+
+### Qué se comprobó realmente
+
+- Acceso: hash Laravel verificado por API, roles, cuenta inactiva, logout, restauración, JWT vencido y 401 atrasado que no borra una sesión nueva; falta de conexión y texto hostil seguro.
+- Cartera: creación/edición, normalización, 422 junto al campo, duplicado/ocupado/cupo 409, recurso ajeno 404, doble envío impedido y búsquedas HTTP solapadas sin sobrescribir resultados recientes.
+- Cotizaciones: crear/editar, agregar/modificar/retirar líneas y 204; mínimo 422, repetido 409, inactivo 422, transiciones no permitidas, ganar sin productos y perder sin motivo rechazados; cerradas 409 e historial estable.
+- Históricos: recorrido SPA conserva Q12.34 × 6 = Q74.04 y cinco entradas tras modificar catálogo. No solicita ficha privada al consultar una cerrada de cliente reasignado.
+- Panel → SPA: administrador crea dos vendedores y producto; supervisor asigna y reasigna cliente. Abiertas pasan al nuevo vendedor, cerradas conservan dueño/crédito y actividad conserva autor.
+- Venta integral: mínimo 5 rechaza 1, acepta 5 a Q12.34; catálogo cambia a Q20/mínimo 10/inactivo, la línea conserva Q61.70, editar a 6 se rechaza y cerrar sigue permitido. Resumen y reporte Laravel muestran esa venta de fixture; reactivar permite cotizar al nuevo precio.
+- Actividades: tres tipos, vencimiento vacío/futuro/pasado, filtros y completar/reabrir; fecha Guatemala interpretada correctamente con navegador en Tokio. Reasignación retira acceso con 404 y el nuevo dueño completa sin cambiar autor.
+- Estado/rol desde panel: desactivar un vendedor y convertir otro a supervisor hace que sus JWT ya emitidos reciban 401 en la siguiente petición; SPA limpia sesión.
+- A6: Valeria octubre/noviembre, Diego y Carlos coinciden con los cuatro controles de la tabla histórica. Mes inicial de Guatemala probado con navegador en Tokio y reloj de página en la frontera de mes; ceros, mes inválido 400, red desconectada, vencimiento, reentrada, cartera compartida y respuestas atrasadas correctos.
+
+No se repitieron las suites completas Laravel/API ni las carreras SQL de cartera/etapas: no cambió su código. La evidencia concurrente histórica conserva su alcance; doble clic y peticiones de lectura solapadas no se presentan como nuevas carreras transaccionales.
+
+### Inspección visual ejecutada
+
+El agente inspeccionó las **18 capturas del recorrido autónomo**: acceso con errores, lista/formulario/ficha de cliente con actividad, embudo, cotización, confirmación, actividades y resumen; cada pantalla a 1280 y 375 px.
+
+Además inspeccionó **ocho capturas representativas de los recorridos reales**: resumen y actividad reasignada en ambos anchos, errores de cliente a 375, mínimo rechazado a 375, venta cerrada a 1280 y Valeria octubre A6 a 375. Legibilidad, mensajes junto al campo, controles, tarjetas e historial visibles; sin desbordamiento de página en esos estados. El recorrido integral también comprueba el ancho solicitado, incluidos formularios/tablas del panel.
+
+Esto acredita inspección de capturas por el agente, no revisión manual en pareja, Postman gráfico ni auditoría completa de accesibilidad. No se afirma inspeccionar cada captura generada ni aprobar todos los estados posibles.
+
+### Conservación y pendientes
+
+Huellas de **todas las filas/columnas** del núcleo y permisos de las tres cuentas de control idénticos antes/después:
+
+| Base | Cuentas | Productos | Clientes | Oportunidades | Líneas | Historial | Actividades |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| crm_ferreteria | 11 | 10 | 28 | 17 | 19 | 62 | 8 |
+| crm_ferreteria_test | 12 | 12 | 29 | 19 | 21 | 69 | 9 |
+| crm_ferreteria_a6_test | 7 | 5 | 21 | 11 | 13 | 43 | 4 |
+
+Las pruebas de escritura retiraron solo sus propios IDs/prefijos aleatorios; registros manuales conservados. Los autoincrementales pueden avanzar. A6 no recibió escrituras de negocio. Sin reinicios, migraciones, semillas, cambios de permisos, limpieza general o modificaciones del repositorio original.
+
+Pendientes: revisión humana en pareja, Postman gráfico, instalación externa y tareas de entrega del plan. La integración automatizada del rediseño queda comprobada; no equivale a autorizar integración de ramas. No se modificó código de aplicaciones o pruebas. Al finalizar las pruebas, resultados/documentación quedaron sin commit ni push; el cierre documental se autorizó después. PR y etiquetas no cambiaron.
+
+Revisión final de esta etapa: sintaxis de 26 archivos JS/MJS aprobada con node --check; enlaces locales, codificación, exclusiones y git diff --check correctos, sin secretos reales detectados. Solo README, plan y verificación quedan modificados. Se restablecieron los tres servidores manuales: login del panel 200, frontend 200 y productos API sin token 401 esperado; no fue otra prueba funcional. Los perfiles A6 preparados siguen ignorados.
+
+### Cierre documental posterior
+
+Se autorizó guardar únicamente README.md, docs/plan.md y docs/verificacion.md con el mensaje «docs: registrar verificación del rediseño integrado» y publicar revision-raul en origin, sin force push. Este cierre conserva los resultados ya ejecutados y no repite pruebas ni operaciones de base. Revisión en pareja y Postman gráfico siguen pendientes; no se autoriza integrar ramas, cerrar el PR ni cambiar etiquetas.
+
+## Preparación anterior del 7 de noviembre: sin pruebas funcionales
 
 Ejecutó Codex por solicitud de Raúl, sobre crm-ferreteria-equipo/revision-raul. No se cambió código de negocio, bases, permisos o etiquetas; los documentos quedan sin commit/push.
 
@@ -32,7 +108,7 @@ Servidores actuales: panel http://127.0.0.1:8001/login, API http://127.0.0.1:300
 
 ## Matriz de requisitos y evidencias
 
-Todas las filas “histórico” remiten a ejecuciones anteriores del original; ninguna afirma una nueva aprobación del rediseño. Los nombres de prueba corresponden a los archivos importados que pueden consultarse ahora.
+Las filas “histórico” remiten al original. COM-01…05 añaden evidencia nueva para acceso, cartera, cotizaciones, actividades, resumen e integración del rediseño, sin volver a acreditar las carreras SQL históricas. Los nombres de prueba corresponden a los archivos importados que pueden consultarse ahora.
 
 | Código | Criterio y evidencia | Resultado y pendiente |
 | --- | --- | --- |
@@ -65,7 +141,7 @@ Todas las filas “histórico” remiten a ejecuciones anteriores del original; 
 | F3 | opportunities.test.mjs y opportunities-browser.mjs: cotización, etapas, archivo; [fuente][E31] | Histórico aprobado |
 | F4 | activities.test.mjs y activities-browser.mjs: vencimientos, filtros/reasignación; [fuente][E32] | Histórico aprobado |
 | F5 | summary.test.mjs/summary-browser.test.mjs: cifras comunes, mes, ceros/red/401; [fuente][E33] | Histórico aprobado |
-| F6 | Estado/render/eventos, cargas, XSS, respuestas atrasadas, 1280/375 px | Histórico aprobado; Diego registra 44/44 con simulación, integración nueva pendiente |
+| F6 | Estado/render/eventos, cargas, XSS, respuestas atrasadas, 1280/375 px | Histórico y COM-01…05 aprobados; pareja pendiente |
 | S1 | Laravel genera hashes; API verifica bcryptjs; [fuente][E23] | Histórico aprobado, no contraseñas planas en DB |
 | S2 | Entornos ignorados, ejemplos/locks; revisión histórica de secretos e importaciones | Histórico revisado; exclusiones de la copia comprobadas hoy |
 | S3 | SQL parametrizado, búsquedas de inyección y paridad; [fuente][E24] | Histórico aprobado |
@@ -130,7 +206,7 @@ Fuente: [registro del commit f510413](https://github.com/Raulsc87/crm-ferreteria
 
 Diego registró 43 unidades y un recorrido visual autónomo aprobados (44/44), sintaxis de 26 JS/MJS y 18 capturas inspeccionadas: nueve pantallas a 1280/375 px, sin desbordamiento. design-browser.test.mjs usa **API simulada en memoria**, sin MySQL. Incluye validaciones/mensajes, filtros, confirmación de cierre, resumen y texto hostil seguro.
 
-El registro indica dos fallos del ejecutor: comillas sin escapar en selector y referencia a formulario reemplazado por render. Se corrigió el ejecutor y la tercera ejecución pasó, en [f510413](https://github.com/Raulsc87/crm-ferreteria-equipo/commit/f5104135db43407c46bdf72f2993a0400e81e9ad). No fueron fallos de negocio ni resultados ejecutados ahora. La integración real del diseño nuevo y la revisión de Raúl/pareja siguen pendientes aunque los servidores ya estén disponibles.
+El registro indica dos fallos del ejecutor: comillas sin escapar en selector y referencia a formulario reemplazado por render. Se corrigió el ejecutor y la tercera ejecución pasó, en [f510413](https://github.com/Raulsc87/crm-ferreteria-equipo/commit/f5104135db43407c46bdf72f2993a0400e81e9ad). No fueron fallos de negocio ni resultados ejecutados ahora. La integración se comprobó después en COM-01…05; la revisión humana en pareja sigue pendiente.
 
 ## Bitácora de IA: errores reales y corrección
 
@@ -151,9 +227,9 @@ Fuentes de detección: [A7/A8][E28], [F1][E29] e [integral][E34]. No se inventa 
 
 Histórico: agente inspeccionó capturas Edge de formularios, listas, Mi equipo, reportes, cartera, oportunidades, actividades y resumen a 1280/375. Las tablas del panel pueden desplazarse dentro del contenedor; la página no debía desbordar. Esto no es revisión en pareja ni accesibilidad completa.
 
-Hoy se comprobó disponibilidad del diseño real servido, **sin nueva inspección de capturas ni pruebas funcionales**. No declarar aprobación visual humana hasta que ustedes la comuniquen.
+La preparación anterior solo comprobó disponibilidad. COM-01…05 documenta ahora pruebas reales y capturas inspeccionadas por el agente; la aprobación visual humana permanece pendiente.
 
-Pendientes: revisar diseño y recorrido integrado del PR; comprobar permisos/validaciones/errores en sus navegadores; Postman gráfico; ensayo individual, instalación externa, aula, acceso del catedrático y política de hitos del repositorio importado. No se marca completada entrega-final ni un cambio de requisito todavía no publicado. No se modifica ni reinicia ninguna base para preparar la defensa.
+Pendientes: revisar en pareja diseño y recorrido del PR; comprobar permisos/validaciones/errores en sus navegadores; Postman gráfico; ensayo individual, instalación externa, aula, acceso del catedrático y política de hitos del repositorio importado. No se marca completada entrega-final ni un cambio de requisito todavía no publicado. No se modifica ni reinicia ninguna base para preparar la defensa.
 
 [E15]: https://github.com/Raulsc87/crm-ferreteria/blob/033a51e6cb570b9909fe143597bad8bc05da2044/docs/verificacion.md#L349
 [E16]: https://github.com/Raulsc87/crm-ferreteria/blob/033a51e6cb570b9909fe143597bad8bc05da2044/docs/verificacion.md#L413

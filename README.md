@@ -134,7 +134,7 @@ Comandos principales; libere los puertos antes de pruebas con servidores propios
 
 Las pruebas API requieren también los perfiles aislados .env.a6-testing, las dependencias Laravel y PHP_BINARY local; el detalle de bases, evidencias y límites está en [verificación](docs/verificacion.md). El ejecutor Laravel usa el mysqld instalado; MYSQLD_BINARY y PHP_BINARY permiten indicar sus rutas.
 
-Las pruebas automáticas y una API simulada no sustituyen la revisión manual. Siguen pendientes la revisión en pareja del diseño, su integración real y Postman gráfico. Las pruebas manuales sí guardan cambios: use registros propios. **No se ejecutaron pruebas, migraciones ni semillas durante esta edición del README.**
+Las pruebas automáticas y una API simulada no sustituyen la revisión manual. La integración del rediseño ya se comprobó automáticamente; consulte los resultados y límites en [verificación](docs/verificacion.md#verificación-combinada--7-de-noviembre-de-2026). Siguen pendientes la revisión en pareja y Postman gráfico. Las pruebas manuales sí guardan cambios: use registros propios.
 
 ## Documentación
 
