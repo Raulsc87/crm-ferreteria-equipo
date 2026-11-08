@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acceso · CRM Ferretería</title>
+  <link rel="stylesheet" href="./css/bootstrap.min.css">
+  <link rel="stylesheet" href="./css/app.css">
+  <script type="module" src="./js/app.js"></script>
+</head>
+<body>
+  <div id="app" aria-live="polite"></div>
+  <noscript><p class="alert alert-warning m-4">Active JavaScript en su navegador para acceder.</p></noscript>
+
+  <template id="login-view">
+    <main class="login-shell min-vh-100 d-flex align-items-center py-4">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-12 col-sm-10 col-md-7 col-lg-5 col-xl-4">
+            <div class="login-brand text-center mb-4">
+              <span class="brand-mark badge text-bg-success fs-3 mb-3" aria-hidden="true">F</span>
+              <p class="brand-name fw-semibold mb-1">CRM Ferretería</p>
+              <p class="small text-body-secondary mb-0">Su espacio de ventas</p>
+            </div>
+            <section class="login-card card border-0 shadow-sm rounded-4" aria-labelledby="login-title">
+              <div class="card-body p-4">
+                <h1 id="login-title" class="h4 mb-2">Acceso de vendedores</h1>
+                <p class="text-body-secondary mb-4">Ingrese sus datos para continuar.</p>
+                <p data-notice class="alert alert-info small" role="status" hidden></p>
+                <p data-error class="alert alert-danger small" role="alert" hidden></p>
+                <form id="login-form" novalidate>
+                  <div class="mb-3">
+                    <label for="correo" class="form-label">Correo electrónico</label>
+                    <input id="correo" name="correo" type="email" autocomplete="username" maxlength="255" class="form-control" aria-describedby="correo-error" required>
+                    <div id="correo-error" class="invalid-feedback" hidden></div>
+                  </div>
+                  <div class="mb-4">
+                    <label for="clave" class="form-label">Contraseña</label>
+                    <input id="clave" name="clave" type="password" autocomplete="current-password" class="form-control" aria-describedby="clave-error" required>
+                    <div id="clave-error" class="invalid-feedback" hidden></div>
+                  </div>
+                  <button type="submit" class="btn btn-success w-100">
+                    <span data-submit-label>Entrar</span>
+                    <span data-spinner class="spinner-border spinner-border-sm ms-2" aria-hidden="true" hidden></span>
+                  </button>
+                </form>
+              </div>
+            </section>
+            <p class="text-center text-body-secondary small mt-4 mb-0">Acceso exclusivo para cuentas de vendedor.</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </template>
+
+  <template id="session-view">
+    <div class="min-vh-100 d-flex flex-column">
+      <header class="app-header py-3">
+        <div class="container d-flex flex-wrap align-items-center justify-content-between gap-3">
+          <div class="app-brand d-flex align-items-center gap-3">
+            <span class="brand-mark badge text-bg-success fs-4" aria-hidden="true">F</span>
+            <div><h1 class="h5 mb-0">CRM Ferretería</h1><p class="small text-body-secondary mb-0">Área de vendedores</p></div>
+          </div>
+          <div class="seller-profile d-flex flex-wrap align-items-center gap-3">
+            <div class="small text-break"><p class="seller-label mb-0">Vendedor</p><p data-name class="fw-semibold mb-0"></p><p data-mail class="text-body-secondary mb-0"></p></div>
+            <button type="button" data-action="logout" class="btn btn-outline-secondary btn-sm">Cerrar sesión</button>
+          </div>
+        </div>
+      </header>
+      <main class="app-main container py-4 flex-grow-1">
+        <nav class="main-nav nav nav-pills flex-wrap gap-2 mb-4" aria-label="Navegación principal">
+          <a class="nav-link" href="#clientes" data-section="clientes">Mi cartera</a>
+          <a class="nav-link" href="#oportunidades" data-section="oportunidades">Oportunidades</a>
+          <a class="nav-link" href="#actividades" data-section="actividades">Actividades</a>
+          <a class="nav-link" href="#resumen" data-section="resumen">Resumen</a>
+        </nav>
+        <p data-notice class="alert alert-info small" role="status" hidden></p>
+        <section class="workspace-card card border-0 shadow-sm rounded-4" aria-labelledby="section-title">
+          <div class="card-body p-3 p-md-4">
+            <p class="section-kicker text-success small fw-semibold mb-2">ESPACIO DE TRABAJO</p>
+            <h2 id="section-title" class="h3" data-heading></h2>
+            <p data-description class="text-body-secondary mb-4"></p>
+            <div data-section-body class="text-break">Esta sección estará disponible próximamente.</div>
+          </div>
+        </section>
+      </main>
+      <footer class="app-footer container py-3 small text-body-secondary">Ferretería · Aplicación de ventas</footer>
+    </div>
+  </template>
+
+  <template id="loading-view">
+    <main class="container min-vh-100 d-flex align-items-center justify-content-center">
+      <p role="status"><span class="spinner-border spinner-border-sm text-success me-2" aria-hidden="true"></span>Comprobando su sesión…</p>
+    </main>
+  </template>
+  <template id="clients-view">
+    <div class="clients-toolbar d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+      <span data-capacity class="badge text-bg-success fs-6"></span>
+      <button type="button" data-client-action="refresh" class="btn btn-outline-secondary btn-sm">Actualizar listas</button>
+    </div>
+    <p data-capacity-error class="alert alert-warning small" role="alert" hidden></p>
+    <div class="client-tabs d-flex flex-wrap gap-2 mb-4" role="group" aria-label="Opciones de clientes">
+      <button type="button" data-client-action="list" class="btn btn-outline-success">Mis clientes</button>
+      <button type="button" data-client-action="available" class="btn btn-outline-success">Disponibles</button>
+      <button type="button" data-client-action="create" class="btn btn-success">Crear cliente</button>
+    </div>
+    <p data-client-error class="alert alert-danger" role="alert" hidden></p>
+    <p data-client-notice class="alert alert-success" role="status" hidden></p>
+    <div data-client-body></div>
+  </template>
+  <template id="clients-list">
+    <h3 data-list-heading class="module-heading h5 mb-3"></h3>
+    <form id="client-search" class="compact-form row g-2 mb-4" role="search" novalidate>
+      <div class="col-12 col-md">
+        <label for="client-query" class="form-label">Buscar por nombre o NIT</label>
+        <input id="client-query" name="q" type="search" maxlength="150" class="form-control" placeholder="Escriba un nombre, NIT o CF">
+      </div>
+      <div class="col-12 col-md-auto d-flex align-items-end"><button type="submit" class="btn btn-success">Buscar</button></div>
+    </form>
+    <p data-list-status role="status" hidden></p>
+    <p data-list-error class="alert alert-danger" role="alert" hidden></p>
+    <div data-client-list class="client-list list-group"></div>
+  </template>
+  <template id="client-detail">
+    <article class="client-detail-panel">
+    <h3 data-detail-name class="module-heading h5 mb-3"></h3>
+    <dl class="client-details row mb-3">
+      <dt class="col-sm-3">NIT</dt><dd data-detail-nit class="col-sm-9"></dd>
+      <dt class="col-sm-3">Teléfono</dt><dd data-detail-telefono class="col-sm-9"></dd>
+      <dt class="col-sm-3">Correo</dt><dd data-detail-correo class="col-sm-9"></dd>
+    </dl>
+    <div class="detail-actions d-flex flex-wrap gap-2">
+      <button type="button" data-client-action="edit" class="btn btn-success">Editar cliente</button>
+      <button type="button" data-activity-action="new" class="btn btn-outline-success">Registrar actividad</button>
+    </div>
+    <div data-activity-form-container class="mt-4"></div>
+    </article>
+  </template>
+  <template id="client-form">
+    <div class="form-panel compact-form">
+    <h3 data-form-heading class="module-heading h5 mb-3"></h3>
+    <p class="form-help small text-body-secondary">Use CF para consumidor final, o un NIT válido, por ejemplo 4521817-K. Escriba ocho dígitos para el teléfono, por ejemplo 55551234; también se admite +502 (5555)-1234. La API normaliza los datos y comprueba su validez y duplicados.</p>
+    <form id="client-form-fields" class="row g-3" novalidate>
+      <div class="col-12">
+        <label for="client-nombre" class="form-label">Nombre</label>
+        <input id="client-nombre" name="nombre" maxlength="150" class="form-control" aria-describedby="client-nombre-error" required>
+        <div id="client-nombre-error" class="invalid-feedback" hidden></div>
+      </div>
+      <div class="col-12 col-md-6">
+        <label for="client-nit" class="form-label">NIT o CF</label>
+        <input id="client-nit" name="nit" class="form-control" aria-describedby="client-nit-error" required>
+        <div id="client-nit-error" class="invalid-feedback" hidden></div>
+      </div>
+      <div class="col-12 col-md-6">
+        <label for="client-telefono" class="form-label">Teléfono</label>
+        <input id="client-telefono" name="telefono" type="tel" class="form-control" aria-describedby="client-telefono-error" required>
+        <div id="client-telefono-error" class="invalid-feedback" hidden></div>
+      </div>
+      <div class="col-12">
+        <label for="client-correo" class="form-label">Correo (opcional)</label>
+        <input id="client-correo" name="correo" type="email" maxlength="150" class="form-control" aria-describedby="client-correo-error">
+        <div id="client-correo-error" class="invalid-feedback" hidden></div>
+      </div>
+      <div class="col-12 d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-success" data-save-label>Guardar cliente</button>
+        <button type="button" data-client-action="list" class="btn btn-outline-secondary">Cancelar</button>
+      </div>
+    </form>
+    </div>
+  </template>
+  <template id="opportunities-view">
+    <div class="module-actions d-flex flex-wrap gap-2 mb-4">
+      <button type="button" class="btn btn-outline-success" data-op-action="list">Volver al embudo</button>
+      <button type="button" class="btn btn-success" data-op-action="create">Crear oportunidad</button>
+    </div>
+    <p data-op-status role="status" hidden></p>
+    <p data-op-error-summary class="alert alert-danger" role="alert" hidden></p>
+    <p data-op-notice class="alert alert-success" role="status" hidden></p>
+    <div data-op-body></div>
+  </template>
+  <template id="opportunities-list">
+    <form id="op-filter-form" class="compact-form row g-2 mb-4">
+      <div class="col-12 col-md-8"><label for="op-filter" class="form-label">Filtrar por etapa</label><select id="op-filter" name="etapa" class="form-select"></select></div>
+      <div class="col-12 col-md-auto d-flex align-items-end"><button type="submit" class="btn btn-success">Aplicar filtro</button></div>
+    </form>
+    <p data-op-list-message role="status" hidden></p>
+    <div data-op-board class="row g-3 mb-4" aria-label="Etapas abiertas"></div>
+    <section class="closed-opportunities" aria-labelledby="closed-opportunities-title">
+      <h3 id="closed-opportunities-title" class="module-heading h5">Oportunidades cerradas</h3>
+      <div data-op-closed class="closed-opportunities-grid"></div>
+    </section>
+  </template>
+  <template id="opportunity-create">
+    <div class="form-panel compact-form">
+    <h3 class="module-heading h5">Crear oportunidad</h3>
+    <p data-op-choices-message role="status" hidden></p>
+    <form id="op-create-form" class="row g-3" novalidate>
+      <div class="col-12"><label for="op-client" class="form-label">Cliente de su cartera</label><select id="op-client" name="cliente_id" class="form-select" aria-describedby="op-client-error"></select><div id="op-client-error" data-op-error="cliente_id" class="invalid-feedback" hidden></div></div>
+      <div class="col-12"><label for="op-create-title" class="form-label">Título</label><input id="op-create-title" name="titulo" class="form-control" maxlength="150" aria-describedby="op-create-title-error"><div id="op-create-title-error" data-op-error="titulo" class="invalid-feedback" hidden></div></div>
+      <div class="col-12"><button type="submit" class="btn btn-success">Guardar oportunidad</button></div>
+    </form>
+    </div>
+  </template>
+  <template id="opportunity-detail">
+    <div class="op-detail-header">
+      <h3 data-op-title class="h4 text-break"></h3>
+      <p class="mb-1">Cliente: <strong data-op-client></strong></p><p data-op-stage></p>
+      <p data-op-closing class="small text-body-secondary mb-1"></p><p data-op-reason class="mb-0"></p>
+    </div>
+    <p data-op-readonly class="alert alert-info" hidden>Oportunidad cerrada: solo consulta. Se conserva su crédito histórico aunque el cliente cambie de vendedor. El cliente puede estar fuera de su cartera actual.</p>
+    <form id="op-title-form" class="compact-form row g-2 mb-4" novalidate>
+      <div class="col-12"><label for="op-title" class="form-label">Editar título</label><input id="op-title" name="titulo" maxlength="150" class="form-control" aria-describedby="op-title-error"><div id="op-title-error" data-op-error="titulo" class="invalid-feedback" hidden></div></div>
+      <div class="col-12"><button type="submit" class="btn btn-outline-success">Guardar título</button></div>
+    </form>
+    <section class="quote-section" aria-labelledby="quote-products-title">
+      <h4 id="quote-products-title" class="module-heading h5">Productos cotizados</h4><div data-op-lines class="quote-lines"></div>
+      <p class="quote-total fs-5 fw-semibold">Total cotizado: <span data-op-total></span></p>
+    </section>
+    <p data-op-choices-message role="status" hidden></p>
+    <form id="op-add-form" class="quote-form compact-form row g-3 mb-4 border rounded-3 p-3" novalidate>
+      <div class="col-12"><h4 class="h6">Agregar producto</h4><p class="small text-body-secondary">La API copia el precio vigente y valida la cantidad mínima. El precio cotizado se conserva aunque cambie el catálogo.</p><label for="op-product" class="form-label">Producto activo</label><select id="op-product" name="producto_id" class="form-select" aria-describedby="op-product-error"></select><div id="op-product-error" data-op-error="producto_id" class="invalid-feedback" hidden></div></div>
+      <div class="col-12 col-md-6"><label for="op-add-quantity" class="form-label">Cantidad (1–999)</label><input id="op-add-quantity" name="cantidad" type="number" min="1" max="999" step="1" class="form-control" aria-describedby="op-add-quantity-error"><div id="op-add-quantity-error" data-op-error="cantidad" class="invalid-feedback" hidden></div></div>
+      <div class="col-12"><button type="submit" class="btn btn-success">Agregar producto</button></div>
+    </form>
+    <form id="op-stage-form" class="stage-form compact-form row g-3 mb-4" novalidate>
+      <div class="col-12"><h4 class="h5">Cambiar etapa</h4><label for="op-next-stage" class="form-label">Etapa destino</label><select id="op-next-stage" name="etapa" class="form-select" aria-describedby="op-stage-error"></select><div id="op-stage-error" data-op-error="etapa" class="invalid-feedback" hidden></div></div>
+      <div data-loss-reason class="col-12" hidden><label for="op-loss-reason" class="form-label">Motivo de pérdida</label><textarea id="op-loss-reason" name="motivo_perdida" maxlength="255" class="form-control" aria-describedby="op-loss-error"></textarea><div id="op-loss-error" data-op-error="motivo_perdida" class="invalid-feedback" hidden></div></div>
+      <div class="col-12"><button type="submit" class="btn btn-outline-success">Solicitar cambio de etapa</button></div>
+    </form>
+    <section data-close-confirmation class="close-confirmation alert alert-warning" aria-label="Confirmar cierre" hidden><p data-confirm-stage></p><div class="d-flex flex-wrap gap-2"><button type="button" data-op-action="confirm-stage" class="btn btn-danger">Confirmar cierre</button><button type="button" data-op-action="cancel-stage" class="btn btn-outline-secondary">Cancelar cierre</button></div></section>
+    <section class="history-section" aria-labelledby="op-history-title">
+      <h4 id="op-history-title" class="module-heading h5">Historial (hora de Guatemala)</h4><ol data-op-history class="history-list small"></ol>
+    </section>
+  </template>
+  <template id="op-line-form">
+    <form data-op-line-form class="row g-2" novalidate>
+      <div class="col-12"><label class="form-label">Nueva cantidad (1–999)</label><input name="cantidad" type="number" min="1" max="999" step="1" class="form-control"><div data-op-error="cantidad" class="invalid-feedback" hidden></div></div>
+      <div class="col-12 d-flex flex-wrap gap-2"><button type="submit" class="btn btn-outline-success btn-sm">Guardar cantidad</button><button type="button" data-op-action="remove" class="btn btn-outline-danger btn-sm">Retirar línea</button></div>
+    </form>
+  </template>
+  <template id="activity-create">
+    <section class="activity-form-panel form-panel compact-form" aria-labelledby="activity-create-heading">
+      <h3 id="activity-create-heading" class="h5">Registrar actividad de seguimiento</h3>
+      <p class="small text-body-secondary">Ingrese el vencimiento en hora de Guatemala (America/Guatemala), aunque su equipo esté en otra zona. Puede dejarlo vacío o indicar una fecha pasada.</p>
+      <p data-activity-form-error class="alert alert-danger" role="alert" hidden></p>
+      <p data-activity-form-notice class="alert alert-success" role="status" hidden></p>
+      <form id="activity-create-form" class="row g-3" novalidate>
+        <div class="col-12"><label for="activity-tipo" class="form-label">Tipo</label><select id="activity-tipo" name="tipo" class="form-select" aria-describedby="activity-tipo-error"><option value="llamada">Llamada</option><option value="reunion">Reunión</option><option value="tarea">Tarea</option></select><div id="activity-tipo-error" class="invalid-feedback" hidden></div></div>
+        <div class="col-12"><label for="activity-descripcion" class="form-label">Descripción</label><textarea id="activity-descripcion" name="descripcion" maxlength="500" class="form-control" rows="3" aria-describedby="activity-descripcion-error"></textarea><div id="activity-descripcion-error" class="invalid-feedback" hidden></div></div>
+        <div class="col-12"><label for="activity-vence_en" class="form-label">Vencimiento (opcional, Guatemala)</label><input id="activity-vence_en" name="vence_en" type="datetime-local" step="60" class="form-control" aria-describedby="activity-vence_en-error"><div id="activity-vence_en-error" class="invalid-feedback" hidden></div></div>
+        <div class="col-12"><button type="submit" class="btn btn-success">Registrar actividad</button></div>
+      </form>
+    </section>
+  </template>
+  <template id="activities-view">
+    <p class="activity-intro text-body-secondary">Registre nuevas actividades desde el detalle del cliente en Mi cartera.</p>
+    <form id="activity-filter-form" class="compact-form row g-2 mb-4">
+      <div class="col-12 col-md-8"><label for="activity-filter" class="form-label">Filtrar actividades</label><select id="activity-filter" name="estado" class="form-select"><option value="">Todas</option><option value="pendiente">Pendientes</option><option value="completada">Completadas</option></select></div>
+      <div class="col-12 col-md-auto d-flex align-items-end"><button type="submit" class="btn btn-success">Actualizar lista</button></div>
+    </form>
+    <p data-activity-status role="status" hidden></p>
+    <p data-activity-list-error class="alert alert-danger" role="alert" hidden></p>
+    <p data-activity-error class="alert alert-danger" role="alert" hidden></p>
+    <p data-activity-notice class="alert alert-success" role="status" hidden></p>
+    <div data-activity-list></div>
+  </template>
+  <template id="summary-view">
+    <form id="summary-form" class="compact-form row g-2 mb-4" novalidate>
+      <div class="col-12 col-md-8"><label for="summary-month" class="form-label">Mes de Guatemala</label><input id="summary-month" name="mes" type="month" min="1000-01" max="9998-12" class="form-control" required></div>
+      <div class="col-12 col-md-auto d-flex align-items-end"><button type="submit" class="btn btn-success">Actualizar resumen</button></div>
+    </form>
+    <p class="summary-intro text-body-secondary">Ventas y total vendido corresponden al mes seleccionado en Guatemala. El pronóstico incluye todas sus oportunidades abiertas, sin filtro mensual. La cartera muestra sus clientes asignados actualmente.</p>
+    <p data-summary-status role="status" hidden></p>
+    <p data-summary-error class="alert alert-danger" role="alert" hidden></p>
+    <section data-summary-results hidden aria-label="Resultados del resumen">
+      <h3 data-summary-month class="summary-month module-heading h5 mb-3"></h3>
+      <div class="summary-grid row g-3">
+        <div class="col-12 col-md-6"><article class="summary-card summary-card-sales border rounded-3 p-4 h-100"><h4 class="h6">Ventas ganadas del mes</h4><p data-summary-sales class="summary-value fs-3 fw-semibold mb-0"></p></article></div>
+        <div class="col-12 col-md-6"><article class="summary-card summary-card-total border rounded-3 p-4 h-100"><h4 class="h6">Total vendido del mes</h4><p data-summary-total class="summary-value fs-3 fw-semibold mb-0"></p></article></div>
+        <div class="col-12 col-md-6"><article class="summary-card summary-card-forecast border rounded-3 p-4 h-100"><h4 class="h6">Pronóstico de oportunidades abiertas</h4><p data-summary-forecast class="summary-value fs-3 fw-semibold mb-0"></p></article></div>
+        <div class="col-12 col-md-6"><article class="summary-card summary-card-capacity border rounded-3 p-4 h-100"><h4 class="h6">Cartera actual: clientes / máximo</h4><p data-summary-capacity class="summary-value fs-3 fw-semibold mb-0"></p></article></div>
+      </div>
+    </section>
+  </template>
+</body>
+</html>
