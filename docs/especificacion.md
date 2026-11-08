@@ -1,50 +1,48 @@
-# Especificación del CRM de ventas para una ferretería
+# Especificación del CRM Ferretería
 
-Versión de trabajo: 1.0, candidata a la etiqueta `spec-v1`.
+Requisitos de Raúl y Diego. Fuente obligatoria: [enunciado, 22 páginas](enunciado.pdf). Ante una omisión prevalece el PDF; las decisiones abiertas se concretan aquí. El estado de implementación se registra en el [plan](plan.md) y las pruebas en [verificación](verificacion.md).
 
-Integrantes: Raúl y Diego. Sector: ferretería, confirmado como disponible por el equipo. Curso: Programación Web, Universidad Mesoamericana. Fecha: 30 de octubre de 2026.
+La primera especificación y `spec-v1` pertenecen al [repositorio original](https://github.com/Raulsc87/crm-ferreteria/tree/spec-v1), anteriores a su código de negocio. Este repositorio de equipo contiene una importación; no se recrea esa etiqueta ni se finge la misma genealogía.
 
-Fuente de requisitos: `Proyecto_Final_CRM_Enunciado.pdf`, 22 páginas. Esta especificación adapta el núcleo obligatorio; ante una omisión, prevalece el enunciado. El documento no acredita implementación, pruebas ejecutadas ni una etiqueta Git creada.
+## Alcance y arquitectura
 
-## 1. Objetivo y alcance
+Organizar cuentas, clientes, oportunidades/cotizaciones, seguimiento y resultados de una ferretería. Una oportunidad ganada representa una venta. No incluye inventario, existencias, proveedores, facturación, pagos ni tienda pública.
 
-Construir un CRM para que una ferretería organice sus clientes, cotizaciones u oportunidades de venta, actividades de seguimiento y resultados comerciales. El catálogo contiene materiales, herramientas y servicios. Una oportunidad ganada representa una venta para los reportes.
-
-La solución consta de un panel Laravel para administrador y supervisor, una API REST propia con Express para vendedores y una SPA sin framework. Las tres piezas trabajan con una sola base MySQL. No se incluyen inventario, facturación fiscal, pagos en línea ni tienda pública como requisitos de esta versión.
-
-La adaptación de vocabulario a la ferretería se limita a las pantallas. No se cambian nombres de tablas, rutas ni campos del contrato común.
-
-## 2. Arquitectura y herramientas obligatorias
-
-| Pieza | Herramientas | Responsabilidad |
+| Parte | Tecnología obligatoria | Función |
 | --- | --- | --- |
-| Panel | PHP 8.4, Composer, Laravel 13, Breeze con stack Blade, Eloquent | Cuentas, catálogo, clientes, asignaciones, equipos, consulta de oportunidades y reportes |
-| API | Node.js 24 LTS, Express 5, mysql2, jsonwebtoken, bcryptjs y cors | Autenticación JWT y operaciones del vendedor, con SQL parametrizado escrito a mano |
-| SPA | HTML, Bootstrap 5.3 y JavaScript con módulos | Interfaz del vendedor, patrón estado → render y delegación de eventos |
-| Base | MySQL 8.4 LTS, tablas transaccionales InnoDB | Datos compartidos, integridad, unicidad y restricciones CHECK |
-| Pruebas | Postman | Contrato, errores, permisos, regla del sector y evidencias |
+| Panel | PHP 8.4, Laravel 13, Breeze Blade, Eloquent | Administrador y supervisor |
+| API | Node.js 24 LTS, Express 5, mysql2, jsonwebtoken, bcryptjs y cors | Operaciones del vendedor; SQL con parámetros ?, sin ORM ni constructor |
+| SPA | HTML, Bootstrap 5.3 y módulos JavaScript | Vendedor; estado → render y eventos delegados, sin framework |
+| Base | MySQL Community Server 8.4 LTS | Una base compartida por panel y API; fechas UTC, importes DECIMAL |
 
-Solo las migraciones de Laravel crean o alteran el esquema. La API no ejecuta CREATE ni ALTER y no usa ORM ni constructores de consultas. Laravel utiliza Eloquent; sus reportes pueden utilizar el constructor de consultas permitido por el enunciado.
+Solo Laravel crea o cambia el esquema mediante migraciones; users se extiende con una nueva sin editar la original. Se conservan las auxiliares de Laravel. Solo el administrador crea cuentas y solo Laravel genera hashes; la API compara con bcryptjs. Postman verifica el contrato.
 
-La configuración de ambas aplicaciones apunta a la misma base MySQL. Se conservan las tablas auxiliares que necesita Laravel; las siete tablas de negocio indicadas más adelante forman el núcleo común.
+## Roles y decisiones
 
-## 3. Roles y acceso
+| Rol | Acceso y alcance | Límites |
+| --- | --- | --- |
+| Administrador | Panel; cuentas, catálogo, todos los clientes/oportunidades y reportes de empresa | Sin API, sin borrado de cuentas; no puede desactivarse ni quitarse su propio rol |
+| Supervisor | Panel; su equipo, sus clientes y disponibles; asignaciones y reportes del equipo | Sin cuentas/catálogo/API; recursos de otro equipo 404; solo asigna a vendedores activos propios |
+| Vendedor | SPA/API; cartera actual, oportunidades propias, seguimiento y resumen | Sin panel; recursos ajenos o inexistentes 404 |
 
-| Rol | Puerta | Facultades | Restricciones |
-| --- | --- | --- | --- |
-| Administrador | Panel | Crear y editar cuentas; administrar catálogo; administrar todos los clientes; consultar oportunidades y reportes globales | No usa la API del vendedor; no borra cuentas; no puede desactivarse ni quitarse su propio rol |
-| Supervisor | Panel | Consultar su equipo y clientes disponibles; crear y editar clientes de su ámbito; asignar, reasignar y liberar dentro de su equipo; consultar oportunidades y reportes del equipo | No administra cuentas ni catálogo, no accede a otros equipos ni a la API |
-| Vendedor | SPA mediante API | Gestionar su cartera, tomar clientes disponibles, trabajar sus oportunidades y actividades y consultar su resumen | No entra al panel ni accede a recursos ajenos |
+Cada vendedor requiere un supervisor activo válido al crear/editar cuenta; otros roles no llevan supervisor. Un supervisor con vendedores asociados, incluso inactivos, no cambia de rol hasta reasignarlos. Desactivarlo conserva asociaciones y datos. Cambiar el supervisor de un vendedor mueve su ámbito, no la titularidad de clientes.
 
-Cada vendedor pertenece a un supervisor. Al crear o editar cuentas, el supervisor seleccionado debe tener rol supervisor y estar activo. No se permite convertir una cuenta de supervisor en otro rol mientras tenga vendedores asociados; primero deben reasignarse. Desactivar un supervisor conserva las asociaciones y los datos; el administrador mantiene la gestión y puede reorganizar el equipo.
+| Decisión del equipo | Regla adoptada y motivo |
+| --- | --- |
+| Transiciones | prospecto → calificado → propuesta → negociacion → ganada; perder desde cualquier abierta. Sin saltos ni retrocesos: simplifica seguimiento y permite la pérdida de la semilla desde propuesta |
+| Reasignar cliente | Transfiere abiertas, conserva vendedor/crédito de cerradas. No mueve ventas históricas ni inventa cambios de etapa |
+| Consultar archivo tras reasignar | Vendedor anterior lee solo sus cerradas, con id/nombre de cliente; nunca ficha, NIT, teléfono ni correo actuales. Nuevo vendedor no ve las cerradas ajenas |
+| Actividades reasignadas | Conservan autor; acceso y finalización dependen del vendedor actual del cliente |
+| Liberar cliente | Solo sin oportunidades abiertas ni actividades pendientes; conserva cerradas y completadas. No deja trabajo sin responsable |
+| Desactivar vendedor | Bloquea acceso; conserva cartera hasta reasignación explícita, sin liberación automática ni cambio del crédito cerrado |
+| Campos desconocidos | 422 por campo; no ignorarlos silenciosamente ni permitir fijar precio/propietario |
+| Regla del sector | Cantidad mínima por producto; default 1 no interfiere con la semilla común |
 
-Una cuenta desactivada no inicia sesión. Una sesión o JWT ya emitido pierde validez en la siguiente petición al comprobar el estado actual del usuario en la base.
+No hay registro público. Cuenta inactiva no entra; rol y estado se consultan de nuevo en cada petición protegida. Sesión/JWT existentes dejan de servir cuando pierden acceso.
 
-No existe registro público. Solo el administrador crea cuentas desde Laravel. Solo Laravel genera hashes de contraseñas; la API los compara con bcryptjs.
+## Modelo de datos
 
-## 4. Modelo de datos
-
-Todas las tablas del núcleo tienen `id` como clave primaria. Las referencias usan tipos compatibles con `users.id`. Todas tienen `created_at` y `updated_at`, excepto `historial_etapas`, que solo tiene `created_at`. Las fechas se guardan en UTC.
+Todas las tablas tienen id; referencias compatibles con users.id. Todas llevan created_at/updated_at salvo historial_etapas, que solo tiene created_at. Fechas de negocio DATETIME UTC.
 
 | Tabla | Columnas de negocio | Integridad principal |
 | --- | --- | --- |
@@ -56,118 +54,63 @@ Todas las tablas del núcleo tienen `id` como clave primaria. Las referencias us
 | historial_etapas | oportunidad_id, usuario_id, etapa_anterior nullable, etapa_nueva, created_at DATETIME | FKs; etapa_nueva obligatoria; etapa_anterior vacía solo en creación; al borrar oportunidad se borra su historial |
 | actividades | cliente_id, vendedor_id, tipo, descripcion VARCHAR(500), vence_en DATETIME nullable, completada | FKs; tipo llamada/reunion/tarea; descripción obligatoria; completada por defecto falso; al borrar cliente se borran sus actividades |
 
-Los importes usan DECIMAL, nunca FLOAT. Se rechazan precios con más de dos decimales y fuera de la capacidad del campo. La suma y el redondeo de los reportes se realizan en la base con aritmética decimal; solo se convierten a números al serializar JSON.
 
-Los CHECK comprueban precios positivos, cantidades, teléfono y coherencia de etapa: etapas abiertas sin motivo ni cierre; ganada con cierre y sin motivo; perdida con cierre y motivo no vacío. Las FK y los índices únicos constituyen la última barrera de integridad. La relación entre rol y presencia de supervisor_id también se comprueba; que el usuario referenciado sea supervisor se valida en el servidor, porque un CHECK no consulta otra fila.
+Además de las FK y los índices únicos, MySQL aplica CHECK: precio positivo en catálogo/líneas; cantidades y mínimo 1–999; teléfono compacto; presencia de supervisor según rol; abiertas sin cierre/motivo, ganada con cierre y sin motivo, perdida con cierre y motivo no vacío. La aplicación valida roles de las referencias, NIT, cupo, mínimos entre tablas y transiciones.
 
-Las cuentas y los productos se desactivan. El administrador solo elimina clientes sin oportunidades. No se añaden endpoints de eliminación de oportunidades ni de cuentas.
+No hay eliminación de cuentas o productos: se desactivan. Solo administrador elimina clientes sin ninguna oportunidad; sus actividades se borran en cascada. No se añaden endpoints de eliminación de clientes, cuentas u oportunidades.
 
-## 5. Regla propia de la ferretería
+## Reglas y criterios de aceptación R1–R8
 
-**Un producto tiene una cantidad mínima de venta. Al agregarlo a una oportunidad o cambiar su cantidad, la cantidad solicitada debe ser al menos ese mínimo y no superar 999.**
+Cada fila expresa precondición → operación → resultado comprobable.
 
-Ejemplo: martillo con mínimo 1; ladrillo con mínimo 50. Cotizar 20 ladrillos se rechaza; cotizar 50 se acepta. No se exigen múltiplos del mínimo: 51 también se acepta.
-
-La única columna adicional es `productos.cantidad_minima`, obligatoria con valor predeterminado 1 y CHECK entre 1 y 999. El administrador la configura en el catálogo. Los productos de VerificacionSeeder conservan 1. SectorSeeder introduce productos de ferretería con sus mínimos; no modifica productos ni precios de la semilla común.
-
-La API consulta el mínimo en el servidor; no acepta un mínimo ni un precio enviados por el vendedor. Una cantidad entera dentro de 1–999 pero inferior al mínimo devuelve 422 con un error en `cantidad`. El servidor bloquea y comprueba el producto durante la modificación de la línea para evitar lecturas incoherentes.
-
-El mínimo se aplica al agregar o cambiar cantidades. Cambiar el mínimo del catálogo no modifica ni invalida líneas previamente cotizadas, ni altera reportes o totales históricos. Una modificación posterior de cantidad debe cumplir el mínimo vigente. No se añade una condición adicional para ganar una oportunidad con líneas previamente válidas.
-
-Esta regla no cambia las rutas, los cuerpos ni la forma de las respuestas del núcleo. La SPA comunica el rechazo mediante el mensaje de validación del servidor.
-
-## 6. Decisiones del equipo
-
-Estas decisiones concretan las preguntas abiertas del enunciado. Son decisiones de diseño, pendientes de comprobar durante la implementación.
-
-| Pregunta | Decisión adoptada | Alternativa descartada y motivo |
+| Código | Dado / cuando | Entonces |
 | --- | --- | --- |
-| Transiciones del embudo | Solo se avanza una etapa abierta por vez; se gana desde negociacion; se puede perder desde cualquier etapa abierta. No hay saltos ni retrocesos. Una transición no admitida devuelve 422; repetir la etapa actual o modificar una cerrada devuelve 409 | Saltos y retrocesos: complican la explicación y el control del historial. Perder solo desde negociación: impediría representar la pérdida desde propuesta de la semilla |
-| Reasignación de cliente | Las oportunidades abiertas pasan al nuevo vendedor. Las cerradas conservan su dueño y crédito histórico. Las actividades conservan quién las registró, pero su consulta y finalización dependen de la cartera actual del cliente | Cambiar el dueño de ventas cerradas alteraría el crédito histórico. Mantener abiertas con el vendedor anterior dejaría seguimiento fuera de su cartera |
-| Consulta de ventas históricas tras reasignación | El vendedor anterior puede consultar sus oportunidades cerradas y su resumen; el vínculo histórico solo muestra id y nombre del cliente, nunca acceso a su ficha actual ni teléfono, NIT o correo. El nuevo vendedor no consulta esas oportunidades cerradas ajenas | Mostrar la ficha completa expondría datos de un cliente que ya salió de la cartera |
-| Liberación de cliente | Se permite si no tiene oportunidades abiertas ni actividades pendientes. Se conservan oportunidades cerradas y actividades completadas; estas últimas se consultan según la cartera actual | Liberar con trabajo pendiente dejaría oportunidades sin responsable actual |
-| Desactivar vendedor | Se bloquea su acceso y sus clientes permanecen asignados hasta que el administrador o su supervisor los reasigne. Conserva el crédito de sus ventas cerradas | Liberación automática: produciría cambios de cartera y pendientes sin una decisión explícita |
-| Cambiar de supervisor a un vendedor | Se permite a un administrador con supervisor destino activo; la cartera y las oportunidades acompañan al vendedor. La consulta de equipos se basa en la asociación actual | Cambiar también la titularidad de clientes generaría una reasignación innecesaria |
-| Campos fuera del contrato | Se rechazan con 422, con mensajes por campo. Nunca se usan para fijar propietario, precio o etapa inicial | Ignorarlos podría ocultar errores del cliente de la API |
-| Regla del sector | Cantidad mínima por producto, con valor común 1 | Restricciones generales de monto por venta podrían impedir casos válidos de la semilla |
+| R1 | Cuenta que solicita acceso o usa sesión/JWT emitido | Solo su puerta y estado actual; credenciales erróneas 401 en API; cuenta sin acceso con clave correcta 403; vendedor en panel recibe indicación de usar SPA |
+| R2 | Usuario que consulta/modifica, incluso por URL directa o filtro | Solo su ámbito; ajeno/inexistente 404; propietario sale de sesión/token, nunca del cuerpo |
+| R3 | Vendedor con nueve clientes que crea/toma/recibe; varias peticiones simultáneas | Máximo diez; con cupo lleno 409 en API. Toma de un disponible: exactamente un ganador; los demás 409 |
+| R4 | Alta/edición de cliente con formatos equivalentes | NIT/teléfono se normalizan antes de validar/unicidad; varios CF válidos, duplicados 409 en API, incluso por índice concurrente; mismas reglas en ambas puertas |
+| R5 | Oportunidad creada o cambiada por propietario autorizado | Nace prospecto con historial NULL → prospecto. Cambio permitido, cierre UTC e historial atómicos; ganar exige líneas, perder motivo. Cerradas 409. Rechazos no dejan historial; mismo estado observado en paralelo produce una confirmación y un conflicto |
+| R6 | Cotización de producto activo y cantidad válida | Precio copiado del catálogo en servidor; repetido 409; inactivo al agregar 422; subtotal/total SQL decimal. Cambios posteriores de catálogo no alteran líneas ni reportes |
+| R7 | Consulta mensual y pronóstico del ámbito autorizado | Ventas por cierre del mes Guatemala [inicio, siguiente inicio); sumas históricas en base; pronóstico de todas las abiertas, redondeado al final; sin resultados ceros numéricos |
+| R8 | Entrada/salida de fechas y actividad de cartera actual | Fecha de entrada ISO con zona; sin zona 422; guardar/devolver UTC y mostrar Guatemala. vencida solo pendiente con fecha pasada; sin fecha/completada false; respuestas sin campos privados |
 
-Reasignar, liberar y desactivar se resuelven en transacciones. El supervisor solo puede actuar sobre clientes de su equipo o disponibles y asignar a vendedores activos de su propio equipo. Las oportunidades abiertas se transfieren en la misma transacción que el cliente; su historial conserva los usuarios originales, sin inventar cambios de etapa.
+### Identidad del cliente (R4)
 
-## 7. Reglas comunes y criterios de aceptación
+Nombre obligatorio, máximo 150; correo opcional válido, máximo 150. NIT y teléfono son texto; arrays/objetos no se convierten a texto.
 
-### R1. Acceso
+1. NIT: quitar espacios, guiones y ceros iniciales; pasar a mayúsculas. CF o vacío → NULL; solo ceros permanece inválido.
+2. No CF: 2–12 caracteres compactos; cuerpo numérico sin cero inicial y verificador 0–9/K. Ponderar cuerpo de derecha a izquierda por 2, 3, 4…; calcular (11 − (suma mod 11)) mod 11; 10 se representa K.
+3. Ejemplo: 000452 1817-k → 4521817K. CF se devuelve como "CF"; varios NULL no chocan con el índice.
+4. Teléfono: quitar espacios, puntos, paréntesis y guiones; retirar +502 o 502 solo como prefijo de un número completo. Resultado ocho dígitos con inicial 2–9. El local 50212345 se conserva.
+5. NIT no CF y teléfono únicos después de normalizar. Edición excluye solo su propia fila autorizada. Índices MySQL son la barrera final; no exponer SQL ni identidad ajena al traducir conflictos.
 
-- Dado un vendedor activo, cuando inicia sesión en la API con credenciales correctas, entonces recibe token y usuario; si intenta el panel, se le indica que debe usar la SPA.
-- Dado un administrador o supervisor con contraseña correcta, cuando intenta entrar por la API, entonces recibe 403 y ningún token.
-- Dada una cuenta desactivada, cuando inicia sesión, entonces se rechaza el acceso; si ya tenía una sesión o token, la siguiente petición lo invalida.
+### Cartera y transacciones (R3/R5)
 
-### R2. Propiedad y visibilidad
+Todas las altas, tomas y asignaciones cuentan dentro de transacciones y bajo bloqueos comunes. El panel bloquea usuarios implicados en orden estable, luego cliente y sus pendientes. La API conserva users en SELECT: GET_LOCK por base/vendedor y users FOR SHARE, compatible con el FOR UPDATE del panel. Cuenta IDs actuales de clientes bajo bloqueo antes de aumentar cartera.
 
-- Dado un vendedor, cuando lista clientes u oportunidades, entonces recibe solo los que le corresponden según la cartera y la política de archivo histórico.
-- Dado un identificador ajeno, cuando intenta leerlo o modificarlo, entonces recibe 404, igual que si no existiera.
-- Dado un supervisor, cuando consulta una URL de otro equipo, entonces recibe 404.
-- Dada una petición de creación, cuando se determina el propietario, entonces se obtiene del usuario autenticado y nunca del cuerpo recibido.
+API libera el bloqueo nombrado en la misma conexión antes de devolverla al pool; descarta conexiones cuyo rollback/liberación/adquisición no se confirme. Revalida cuenta, ámbito y propietario después de esperar. Detalles y carreras acreditadas: [protocolo-cartera.md](protocolo-cartera.md); sus referencias a secciones antiguas corresponden al registro original enlazado en el anexo.
 
-### R3. Cartera y concurrencia
+Cambio de etapa compara el estado observado antes de esperar con el bloqueado: si cambió, 409. Conserva esa observación en reintentos. Etapa, cierre e historial se confirman o revierten juntos. Cambiar título/líneas o reasignar no inventa historial de etapa.
 
-- Dado un vendedor con 9 clientes, cuando crea, toma o recibe uno, entonces termina con 10; un intento adicional se rechaza, con 409 en la API.
-- Dados clientes disponibles, cuando un vendedor los lista, entonces cada elemento solo contiene id y nombre.
-- Dados varios vendedores que intentan tomar simultáneamente el mismo cliente disponible, cuando concluyen las peticiones, entonces exactamente uno lo obtiene y los demás reciben 409.
-- Dado un vendedor con 9 clientes y varias altas o tomas simultáneas, cuando concluyen, entonces su cartera nunca supera 10.
+### Dinero y mínimo del sector
 
-### R4. Identidad del cliente
+Nombre del producto obligatorio, normalizado sin espacios sobrantes, único, máximo 120. Precio positivo de Q0.01 a Q99,999,999.99, hasta dos decimales; cantidades enteras 1–999; activo booleano.
 
-- Dado el NIT `452 1817-k`, cuando se normaliza, entonces se guarda `4521817K`; se eliminan espacios, guiones y ceros iniciales y se convierte a mayúsculas antes de validar.
-- Dado un NIT compacto de 2–12 caracteres, cuando se valida, entonces se separa el verificador, se pondera el cuerpo de derecha a izquierda por 2, 3, 4… y se calcula `(11 - (suma mod 11)) mod 11`; el valor 10 se representa como K.
-- Dado CF, cuando se guarda, entonces el NIT es NULL y se devuelve `CF`; varios clientes pueden tener CF.
-- Dado un teléfono con espacios, guiones, puntos, paréntesis o prefijo 502/+502, cuando se normaliza, entonces queda un número de ocho dígitos que comienza de 2 a 9, o se rechaza con 422.
-- Dado un NIT no CF o teléfono ya existente, cuando se intenta crear o editar un cliente con el mismo valor normalizado, entonces la API devuelve 409, incluso con peticiones simultáneas.
-- Dados los mismos datos, cuando se envían desde Laravel y desde la API, entonces ambos aceptan o rechazan con las mismas reglas de negocio.
+productos.cantidad_minima es SMALLINT obligatorio, default 1, CHECK 1–999. Agregar o editar cantidad exige al menos el mínimo vigente; no exige múltiplos: mínimo 50 admite 50 y 51, rechaza 20 o 49 con 422 en cantidad. VerificacionSeeder conserva mínimo 1.
 
-### R5. Oportunidades e historial
+Al agregar se bloquea producto con FOR SHARE, se exige activo y se copia precio_unitario. Editar cantidad conserva precio histórico y exige mínimo vigente aunque el producto ya esté inactivo. Cambiar catálogo no altera líneas anteriores ni impide cerrar una cotización previamente válida. SPA nunca envía precio, mínimo, subtotales ni total.
 
-- Dado un cliente de la cartera, cuando se crea una oportunidad con título válido, entonces nace en prospecto y se inserta el registro inicial del historial con etapa_anterior NULL.
-- Dada una oportunidad abierta, cuando cambia por una transición permitida, entonces etapa, fecha de cierre si aplica e historial se guardan en la misma transacción.
-- Dada una oportunidad sin productos, cuando se intenta ganar, entonces se rechaza con 422.
-- Dada una pérdida sin motivo de 1–255 caracteres después de quitar espacios sobrantes, cuando se solicita, entonces se rechaza con 422.
-- Dada una oportunidad ganada o perdida, cuando se intenta cambiar título, etapa o líneas, entonces se devuelve 409 sin cambios.
-- Dado un intento rechazado, cuando se consulta el historial, entonces no aparece un registro nuevo.
-- Dados cambios concurrentes que parten del mismo estado de una oportunidad, cuando se resuelven, entonces solo uno confirma y el otro recibe 409; no se duplica el historial.
+### Meses y pronóstico
 
-### R6. Dinero y productos
+Mes AAAA-MM, por defecto el actual de America/Guatemala; rango admitido 1000-01–9998-12. Límites locales convertidos a UTC, inicio inclusivo y siguiente inicio exclusivo. Octubre 2026: [2026-10-01 06:00:00, 2026-11-01 06:00:00) UTC.
 
-- Dado un producto activo, cuando se agrega a una oportunidad, entonces su precio actual se copia a precio_unitario; el vendedor solo envía producto_id y cantidad.
-- Dada una línea existente, cuando cambia el precio del catálogo, entonces su precio cotizado y el reporte histórico no cambian.
-- Dado un producto repetido en la misma oportunidad, cuando se intenta agregar, entonces se devuelve 409.
-- Dada una cantidad no entera, fuera de 1–999 o inferior al mínimo aplicable, cuando se agrega o modifica, entonces se devuelve 422 sin modificar líneas.
-- Dado un producto inactivo, cuando se intenta agregar, entonces se rechaza con 422; las líneas ya existentes se conservan.
-- Dada una oportunidad, cuando se consulta, entonces el servidor calcula total como la suma de cantidad × precio_unitario.
+Una venta es una oportunidad ganada. Total vendido = suma de sus cantidades × precios guardados. Probabilidades: prospecto 10%, calificado 25%, propuesta 50%, negociacion 75%, ganada 100%, perdida 0%. Pronóstico = ROUND(SUM(total × probabilidad), 2) de todas las abiertas, sin mes. No sumar valores ya redondeados ni multiplicar recuentos al unir líneas/clientes.
 
-### R7. Reportes
+Panel: empresa o equipo, desglose por vendedor y producto con unidades e importe vendido. Contar ventas distintas por producto no permite sumar esa columna para obtener ventas de empresa. Cartera se cuenta aparte según asignación actual; ventas conservan vendedor histórico.
 
-- Dadas oportunidades ganadas, cuando se consulta un mes, entonces solo se suman las cerradas dentro de ese mes calendario en Guatemala, UTC−6.
-- Dadas oportunidades abiertas, cuando se calcula el pronóstico, entonces se suman sus totales ponderados por 10%, 25%, 50% o 75% según prospecto, calificado, propuesta o negociacion, sin filtro mensual; se redondea la suma a dos decimales.
-- Dado un reporte, cuando se calcula, entonces la agregación ocurre en la base; los importes JSON son números.
-- Dado un supervisor o administrador, cuando consulta el panel, entonces ve respectivamente su equipo o toda la empresa, con desglose por vendedor y por producto según corresponda.
+## Contrato de la API
 
-### R8. Formatos, fechas y actividades
-
-- Dada una respuesta de API, cuando se serializa, entonces no contiene hashes ni campos internos vendedor_id, user_id, usuario_id o supervisor_id. Se conservan los identificadores expresamente requeridos por el contrato, como producto_id en las líneas.
-- Dada una fecha sin zona horaria, cuando se recibe en la API, entonces se rechaza con 422; una fecha con zona se convierte a UTC y se devuelve en ISO 8601, por ejemplo `2026-10-05T16:00:00.000Z`.
-- Dada una fecha mostrada en la SPA, cuando se renderiza, entonces se usa `America/Guatemala` aunque la computadora esté en otra zona.
-- Dada una actividad no completada con vencimiento anterior al momento actual, cuando se responde, entonces vencida es true; sin vencimiento o completada, es false.
-
-### SEC. Regla del sector
-
-- Dado un ladrillo con cantidad_minima 50, cuando se solicitan 20 unidades, entonces se devuelve 422 en cantidad y no se crea la línea.
-- Dado el mismo producto, cuando se solicitan 50 o 51 unidades, entonces se acepta si se cumplen las demás reglas.
-- Dada una línea con 50 ladrillos, cuando se intenta reducir a 49, entonces se devuelve 422 y permanece en 50.
-- Dado un producto de VerificacionSeeder con mínimo 1, cuando se ejecutan los casos comunes, entonces sus resultados no cambian por la regla propia.
-- Dada una cotización existente, cuando el administrador aumenta el mínimo del catálogo, entonces no cambia la cotización; una edición posterior de cantidad debe satisfacer el nuevo mínimo.
-
-## 8. Contrato de la API
-
-Base: `http://localhost:3000/api`. Entrada y salida JSON. Todas las rutas requieren `Authorization: Bearer <token>`, excepto POST /auth/login. El JWT usa HS256, identifica al usuario mediante sub y tiene expiración configurable en .env.
+Base habitual http://127.0.0.1:3000/api; revisión local usa 3001. JSON; Bearer salvo POST /auth/login. JWT HS256, sub textual del id y expiración configurable. Firma/algoritmo/expiración/sub y cuenta vendedora activa se comprueban en cada petición.
 
 | Método | Ruta relativa | Entrada permitida | Éxito | Errores del contrato |
 | --- | --- | --- | --- | --- |
@@ -192,11 +135,16 @@ Base: `http://localhost:3000/api`. Entrada y salida JSON. Todas las rutas requie
 | DELETE | /oportunidades/:id/productos/:lineaId | Sin cuerpo | 204, sin cuerpo | 401, 404, 409 |
 | GET | /reportes/resumen | mes opcional AAAA-MM; por defecto mes actual en Guatemala | 200, resumen | 400, 401 |
 
-Hay 20 endpoints obligatorios. lineaId es el identificador de la línea, no el del producto. Las listas se devuelven como arreglos JSON, sin inventar envoltorios ni paginación que cambien el contrato. No se modifica el contrato para adaptarlo al sector.
 
-La tabla reproduce los códigos listados en el enunciado. La regla transversal R2 exige 404 cuando un identificador apunta a un recurso ajeno, incluso al enviar cliente_id en la creación de una oportunidad; se documenta esta prioridad porque ese caso no aparece en la lista de errores de esa fila del contrato.
+Son exactamente veinte endpoints. Listas como arreglos sin envoltorio; lineaId identifica línea, no producto. Campos no admitidos 422; filtros/cuerpos ilegibles o parámetros no admitidos 400. R2 exige 404 también en POST /oportunidades con cliente ajeno, aunque esa fila del PDF omita el código: interpretación explícita conservada, pendiente de confirmar con el catedrático.
 
-### Formas de respuesta
+Login recibe solo correo/clave; correo normalizado, contraseña intacta. bcryptjs verifica el hash Laravel; clave no vacía y hasta 72 bytes. Correo inexistente/clave errónea comparten el mismo 401. Tras clave correcta, administrador/supervisor/inactivo reciben 403 sin token. usuario solo id/nombre/correo.
+
+POST cliente exige nombre/nit/telefono, correo opcional; PATCH solo campos que cambian. POST oportunidad solo cliente_id/titulo (1–150, espacios compactados), etapa prospecto impuesta. PATCH título solo titulo. IDs de cuerpos enteros positivos; no acepta propietario o precio.
+
+Actividad: tipo llamada/reunion/tarea; descripción 1–500, sin solo espacios; fecha opcional se omite si no existe. Si se envía, texto ISO con T y zona Z o ±HH:mm; calendario válido y rango UTC MySQL. Se admiten fechas pasadas, segundos opcionales/fracciones, almacenando segundos según DATETIME. NULL/vacío/sin zona: 422. PATCH solo completada booleano; estado inválido en GET: 400.
+
+### Respuestas públicas
 
 Cliente:
 
@@ -260,60 +208,66 @@ Error general y de validación:
 {"errores":{"cantidad":"Ingrese al menos 50 unidades para este producto."}}
 ```
 
-### Códigos y precedencia
 
-| Código | Uso |
+
+### Códigos de respuesta
+
+| Código | Significado |
 | --- | --- |
-| 200 | Lectura o modificación correcta |
+| 200 | Consulta/modificación/toma correcta |
 | 201 | Creación de cliente, oportunidad, línea o actividad |
-| 204 | Eliminación de línea, sin cuerpo de respuesta |
-| 400 | JSON mal formado, cuerpo obligatorio ausente, filtro/parámetro no admitido o mes inválido |
-| 401 | Credenciales incorrectas; token ausente, alterado, vencido o inválido; usuario del token desactivado o que dejó de ser vendedor |
-| 403 | Login con contraseña correcta de administrador, supervisor o cuenta desactivada |
-| 404 | Recurso inexistente o ajeno; una línea que no pertenece a la oportunidad indicada tampoco es accesible |
-| 409 | Cartera llena, cliente ya tomado, duplicados, oportunidad cerrada o conflicto concurrente |
-| 422 | Datos inválidos, campos fuera del contrato, transición no permitida, cantidad inferior al mínimo o fecha sin zona |
-| 500 | Fallo inesperado con mensaje genérico; detalle solo en consola |
+| 204 | Línea retirada, sin cuerpo |
+| 400 | Cuerpo ilegible/ausente cuando se exige; filtro/parámetro no admitido o inválido |
+| 401 | Credenciales erróneas o token/cuenta ya no válidos |
+| 403 | Login con clave correcta sin permiso para API |
+| 404 | Recurso ajeno o inexistente, incluida línea fuera de la oportunidad |
+| 409 | Cupo, cliente tomado, duplicado, cerrada o conflicto de estado |
+| 422 | Datos/campos/transiciones/mínimo/fecha inválidos |
+| 500 | Error inesperado, mensaje genérico; diagnóstico interno |
 
-Se autentica antes de exponer recursos. Los filtros y JSON se validan; cuando hay un recurso identificado se comprueba su acceso antes de comunicar su estado. Correo inexistente y contraseña incorrecta producen la misma respuesta 401. Los errores controlados y las rutas inexistentes siempre responden JSON, nunca páginas HTML ni trazas.
+Se autentica antes de exponer recursos y se autoriza antes de informar su estado. Los errores no muestran SQL, trazas, hashes ni secretos. 204 es la excepción deliberada a cuerpo JSON.
 
-## 9. Requisitos del panel y aceptación
+## Requisitos por aplicación
 
-| Código | Dado / Cuando / Entonces |
+### Panel L1–L7
+
+| Código | Criterio comprobable |
 | --- | --- |
-| L1 | Dada una base vacía, cuando se ejecuta migrate:fresh --seed, entonces se crean las tablas, restricciones y ambas semillas sin pasos manuales; con --seeder=VerificacionSeeder se carga solo la común. users se amplía con una migración nueva |
-| L2 | Dado un administrador autenticado, cuando crea o edita una cuenta, entonces valida nombre, correo, contraseña, rol, supervisor y estado; no existen rutas de registro público y no puede desactivarse ni retirarse su propio rol |
-| L3 | Dado el administrador, cuando crea o edita un producto, entonces valida nombre único, precio positivo con hasta dos decimales y cantidad mínima; desactivar conserva el producto y sus cotizaciones |
-| L4 | Dado un usuario del panel, cuando consulta clientes, entonces puede buscar por nombre o NIT y filtrar por vendedor o sin asignar dentro de su ámbito; las altas, ediciones y asignaciones cumplen R3/R4; solo el administrador elimina clientes sin oportunidades |
-| L5 | Dado un supervisor, cuando abre su equipo, entonces ve solo sus vendedores, cartera ocupada de 10 y ventas del mes; no puede asignar a vendedores ajenos o inactivos |
-| L6 | Dado el panel, cuando se consultan oportunidades, entonces son de solo lectura, filtrables por etapa/vendedor y muestran total y cierre en Guatemala; el reporte tiene selector mensual, ventas, total y pronóstico, con desgloses y alcance por rol |
-| L7 | Dados datos inválidos, cuando se envía un formulario, entonces el servidor valida con FormRequest o validate, conserva lo escrito y presenta junto al campo un mensaje en español que trata de usted; sus reglas coinciden con la API |
+| L1 | En base exclusiva vacía, migraciones/semillas crean núcleo íntegro, ambas cargas o solo VerificacionSeeder; users se extiende sin editar su migración original |
+| L2 | Administrador crea/edita nombre, correo, contraseña, rol, supervisor y estado; contraseña obligatoria al crear y vacía conserva al editar; roles, supervisor activo y protección propia aplicados en servidor |
+| L3 | Administrador lista/agrega/edita/desactiva; nombre único, precio positivo hasta dos decimales, mínimo y booleano válidos; no borra ni modifica históricos |
+| L4 | Clientes buscables por nombre/NIT, filtro vendedor/sin asignar dentro del ámbito; altas/ediciones R3/R4, asignar/reasignar/liberar según decisiones; solo administrador elimina sin oportunidades |
+| L5 | Supervisor solo ve su equipo, incluidos inactivos, cartera de diez y ventas del mes; URL ajena 404 y destino activo propio |
+| L6 | Oportunidades solo lectura, filtro etapa/vendedor, total y cierre Guatemala; reportes empresa/equipo por vendedor/producto con mes, ventas, total y pronóstico; cifras comunes exactas |
+| L7 | Todas las entradas FormRequest/validate; español de usted, datos conservados y errores junto al campo, nunca contraseñas; paridad R3/R4 con API |
 
-## 10. Requisitos de API y aceptación
+### API A1–A8
 
-| Código | Dado / Cuando / Entonces |
+| Código | Criterio comprobable |
 | --- | --- |
-| A1 | Dado un vendedor activo y clave correcta, cuando inicia sesión, entonces se verifica el hash de Laravel con bcryptjs y se emite JWT HS256 con sub y expiración configurada |
-| A2 | Dada una ruta protegida, cuando se solicita, entonces se verifica firma, algoritmo y expiración y se consulta de nuevo users; un token inválido o usuario deshabilitado devuelve 401 |
-| A3 | Dadas operaciones de clientes, cuando se ejecutan, entonces respetan propiedad, normalización, cartera de 10 y exclusión concurrente |
-| A4 | Dadas operaciones de oportunidades o líneas, cuando se ejecutan, entonces respetan etapas, precio copiado, cantidades, regla del sector, cierre inmutable e historial transaccional |
-| A5 | Dada una actividad, cuando se registra, consulta o completa, entonces se comprueba la cartera actual del cliente, tipo, descripción, booleano y fechas con zona; vencida se calcula al responder |
-| A6 | Dada la semilla común, cuando se solicita el resumen mensual, entonces SQL produce exactamente las cifras de control como números |
-| A7 | Dada cualquier respuesta o error, cuando llega al cliente, entonces usa JSON, código y forma establecidos; un error 500 no revela detalles internos |
-| A8 | Dada una instalación desde cero, cuando se sigue README, entonces pueden iniciarse las tres piezas; docs/api.postman_collection.json contiene al menos una petición por endpoint, errores principales y la regla propia |
+| A1 | Login verifica hash Laravel con bcryptjs; vendedor activo 200 token/usuario, credenciales erróneas 401 uniforme y demás roles/inactivo con clave correcta 403 |
+| A2 | Bearer en toda ruta protegida; firma HS256, expiración/sub y cuenta actual comprobados; falla 401 |
+| A3 | Seis rutas de clientes con R2/R3/R4; toma de diez vendedores produce un ganador y cupo simultáneo máximo diez |
+| A4 | Ocho rutas de oportunidades/líneas con R5/R6, precio copiado, mínimo, cierre inmutable e historial atómico concurrente |
+| A5 | Seguimiento por cartera actual, autor histórico, ISO con zona y vencida calculada |
+| A6 | Resumen SQL con R7 y números exactos de la semilla común |
+| A7 | Veinte contratos, códigos y errores JSON; 422 por campo, 500 genérico sin detalles internos |
+| A8 | README con arranque desde cero y tabla de rutas; colección con cada endpoint, errores y mínimo del sector |
 
-## 11. Requisitos de SPA y aceptación
+### SPA F1–F6
 
-| Código | Dado / Cuando / Entonces |
+| Código | Criterio comprobable |
 | --- | --- |
-| F1 | Dado un login correcto, cuando entra el vendedor, entonces se guarda solo su sesión en LocalStorage; cerrar sesión la elimina; cualquier 401 durante el uso vuelve al login con aviso y un 403 de login se comunica |
-| F2 | Dada su cartera, cuando la consulta, entonces ve clientes, búsqueda procesada por el servidor y ocupación de 10; al crear conserva datos ante errores y los muestra junto al campo; al tomar un disponible comunica un 409 |
-| F3 | Dado el embudo, cuando se muestra, entonces hay cuatro columnas abiertas y lista de cerradas; el detalle presenta líneas, precios cotizados, subtotales, total e historial; permite productos, cantidades y transiciones válidas; perder solicita motivo |
-| F4 | Dadas actividades, cuando se muestran, entonces se distinguen pendientes, completadas y vencidas; una actividad nueva convierte la hora local de Guatemala a ISO con zona y puede marcarse completada |
-| F5 | Dado un mes elegido, cuando se consulta resumen, entonces se muestran ventas, total, pronóstico y cartera, con quetzales y fechas de Guatemala |
-| F6 | Dada cualquier operación, cuando hay peticiones, entonces se indica carga; si falla la conexión se muestra un mensaje claro; se usa estado → render, delegación de eventos y texto seguro; a 375 px no hay desplazamiento horizontal |
+| F1 | Login y 403 comprensible; solo sesión en LocalStorage; logout borra y 401 protegido vuelve al acceso con aviso |
+| F2 | Cartera/búsqueda en servidor, ocupación de diez, alta/edición con errores y datos conservados, disponibles/toma y 409 claro |
+| F3 | Cuatro columnas abiertas y lista de cerradas; detalle, precio histórico, cantidades, subtotal/total, historial Guatemala, transiciones y motivo al perder |
+| F4 | Crear desde cliente, listar pendientes/completadas, distinguir vencidas y completar; fecha Guatemala convertida con zona, independiente del equipo |
+| F5 | Selector mensual, ventas, total, pronóstico y cartera desde API, quetzales y fechas Guatemala |
+| F6 | Estado → render, eventos delegados, carga y conexión fallida comprensibles, texto seguro y uso a 375 px sin desbordamiento horizontal |
 
-## 12. Seguridad y concurrencia
+Estos son criterios exigidos, no resultados de pruebas. Los comandos fresh del criterio L1 y de la defensa se reservan a una base exclusiva cuyo reinicio se autorice expresamente; nunca a las bases manual/principal/A6 conservadas.
+
+## Seguridad S1–S8
 
 | Código | Criterio verificable | Dónde se cumple |
 | --- | --- | --- |
@@ -326,19 +280,12 @@ Se autentica antes de exponer recursos. Los filtros y JSON se validan; cuando ha
 | S7 | Nombres maliciosos se muestran como texto, sin ejecutar scripts | textContent o escape antes de innerHTML; Blade con salida escapada, nunca {!! !!} para datos de usuario |
 | S8 | Duplicados, cartera, toma de clientes y etapas siguen siendo correctos en paralelo | Índices únicos, transacciones, bloqueos y comprobaciones de estado |
 
-Para cartera, ambas aplicaciones bloquean la misma fila de vendedor antes de contar y modificar asignaciones; todas las rutas de alta, toma y asignación siguen ese protocolo. Reasignaciones bloquean los vendedores involucrados en orden estable y luego el cliente; se vuelve a comprobar propietario y cupo dentro de la transacción. Para evitar una cuenta con cartera llena por altas simultáneas, el recuento es una lectura consistente con los bloqueos de esa transacción, no una cuenta previamente obtenida fuera de ella.
 
-Para oportunidades se observa la etapa al inicio de la operación y se comprueba de nuevo bajo bloqueo antes de confirmar; una petición basada en estado ya cambiado recibe 409. El historial, la etapa y el cierre se confirman juntos. Las operaciones sobre líneas también bloquean la oportunidad y comprueban que siga abierta. Una operación secuencial que comienza después del cambio confirmado utiliza el estado nuevo y puede avanzar según las reglas.
+## Semillas y controles
 
-La unicidad depende finalmente de los índices MySQL; una consulta previa no sustituye esa protección. Las violaciones de unicidad se traducen a 409 sin filtrar detalles SQL. Los bloqueos se adquieren en orden consistente y los errores transaccionales se resuelven sin resultados parciales ni trazas al usuario.
+VerificacionSeeder reproduce exactamente sección 11 del PDF: cuentas/equipos/estados, productos, clientes, cotizaciones, precios históricos, fechas UTC, historial y actividades. Sin IDs fijos ni sustituciones de nombres. Solo Laravel genera hashes. Recuentos: 7 cuentas, 5 productos, 21 clientes, 11 oportunidades, 13 líneas, 43 historiales y 4 actividades.
 
-## 13. Semillas y cifras de control
-
-VerificacionSeeder reproduce exactamente nombres, correos, roles, estados, equipos, productos, clientes, oportunidades, precios cotizados y fechas de la sección 11 del enunciado. No se sustituyen sus datos por nombres de ferretería.
-
-Inventario esperado del núcleo: 7 cuentas, 5 productos, 21 clientes, 11 oportunidades, 43 registros de historial y 4 actividades. Los identificadores pueden variar; las relaciones se construyen a partir de los registros correspondientes, sin asumir ids fijos.
-
-Todas las cuentas comunes usan la contraseña pública indicada en la sección 11 del enunciado. Su valor literal solo puede aparecer en seeders, README y colección de Postman; se almacena únicamente como hash en la base.
+DatabaseSeeder ejecuta VerificacionSeeder y después SectorSeeder. Sector agrega identidades distintas, catálogo con referencias de Guatemala, vendedores/supervisores, oportunidades de todas las etapas y actividades; sin modificar comunes ni superar diez clientes. Ambas rechazan repeticiones. Contraseña pública únicamente en seeders, README y colección.
 
 | Usuario / ámbito | Mes | Ventas | Total vendido | Pronóstico | Cartera |
 | --- | --- | ---: | ---: | ---: | --- |
@@ -357,35 +304,23 @@ Todas las cuentas comunes usan la contraseña pública indicada en la sección 1
 | Instalación | 1 | Q450.00 |
 | Soporte anual | 3 | Q10,800.00 |
 
-La venta de Valeria del 1 de noviembre a las 03:30 UTC pertenece a octubre en Guatemala. La del 1 de noviembre a las 06:30 UTC pertenece a noviembre. Renovación de planes conserva el Plan avanzado cotizado a Q2,600.00, aunque el catálogo muestre Q2,750.50.
 
-SectorSeeder corre después de VerificacionSeeder y agrega supervisores, vendedores, productos, clientes, oportunidades en todas las etapas y actividades propios de ferretería. No reutiliza correos, NIT ni teléfonos comunes, no supera diez clientes por vendedor y usa precios creíbles del mercado guatemalteco, que deben verificarse al preparar el catálogo. Los productos con mínimo mayor que 1 se crean aquí. La defensa utiliza únicamente VerificacionSeeder.
+Cierre 2026-11-01 03:30 UTC pertenece a octubre Guatemala; 06:30 UTC a noviembre. Renovación de planes conserva Q2,600.00 en Plan avanzado frente a Q2,750.50 del catálogo. La defensa usa solo la semilla común, en un entorno separado autorizado.
 
-## 14. Proceso, documentación y aceptación de entrega
+## Proceso P1–P5 y entrega
 
-| Código | Compromiso verificable |
+| Código | Entregable y criterio |
 | --- | --- |
-| P1 | Esta especificación se revisa antes del código de negocio y se marca en Git con spec-v1; incluye sector, regla, criterios, contrato, modelo y decisiones justificadas |
-| P2 | docs/plan.md define arquitectura, estructura, fases, tareas, responsable y encargos a la IA; se actualiza antes de cada fase |
-| P3 | docs/verificacion.md relaciona cada criterio con prueba, evidencia y resultado real, incluyendo seguridad, concurrencia y cifras de control |
-| P4 | AGENTS.md en la raíz establece las reglas del proyecto para el agente |
-| P5 | La bitácora en verificacion.md documenta al menos tres errores reales propuestos por IA, detección y commit correctivo; no se inventan casos |
+| P1 | Especificación anterior al código: sector, regla, criterios verificables, contrato, modelo y decisiones con alternativas. Evidencia de spec-v1 en el original, enlazada sin recrearla |
+| P2 | Plan actualizado antes de cada fase: arquitectura, tareas, responsables reales y encargos a IA |
+| P3 | Matriz con evidencia, resultados, controles, concurrencia y pendientes, sin inventar pruebas |
+| P4 | AGENTS.md en raíz con reglas del proyecto |
+| P5 | Al menos tres errores reales de IA: propuesta, detección, corrección y commit correctivo con procedencia |
 
-El repositorio tendrá README.md, AGENTS.md, .gitignore, docs/especificacion.md, docs/plan.md, docs/verificacion.md, docs/api.postman_collection.json, laravel/, api/ y frontend/. Se excluyen vendor/, node_modules/ y secretos; se incluyen archivos de dependencias y .env.example necesarios para reproducir la instalación.
+La alternativa a transferir abiertas era dejarlas fuera de cartera; la alternativa a conservar crédito cerrado era alterar ventas históricas. Liberar con pendientes y liberar automáticamente al desactivar se descartaron por dejar seguimiento sin responsable. Ignorar campos extra se descartó para detectar errores de contrato. No se imponen montos mínimos generales que impidan la semilla común.
 
-Mientras se prepara la especificación se puede instalar y configurar el entorno y crear el esqueleto Laravel/Breeze, sin adelantar implementación del negocio. Raúl y Diego realizan commits propios y significativos a lo largo del proyecto; ambos deben entender todas las piezas. La distribución concreta de tareas se fija en plan.md.
+Archivos de entrega: README, AGENTS, .gitignore, especificación/plan/verificación, colección, laravel/api/frontend, manifiestos/locks y ejemplos sin secretos. Git acredita commits reales de ambos integrantes, sin cambiar autores. Ambos responden por todo el código, incluso el generado con IA.
 
-Cuando el catedrático publique el cambio de requisito, se actualizarán primero especificación y plan, se creará la etiqueta spec-v2 y se implementará con migraciones nuevas, sin editar las ya existentes. Después se repetirán las verificaciones afectadas y las de regresión relevantes.
+Cambio del catedrático: especificación y plan primero, spec-v2 y migraciones nuevas después; no editar las aplicadas. No anticipar requisitos. Entrega: enlace accesible al catedrático y hash de entrega-final, semana anterior al examen (sin fecha concreta publicada aquí). La genealogía importada y los hitos originales deben explicarse, no falsificarse.
 
-La entrega consiste en enlace al repositorio accesible para el catedrático e identificador del commit etiquetado entrega-final, obtenido con git rev-parse entrega-final. Lo que quede fuera de ese commit no está entregado. El enunciado indica la semana anterior al examen final, sin fijar aquí una fecha calendario.
-
-La defensa dura 15 minutos por pareja, con nota individual: tres piezas corriendo en una computadora, Postman abierto, repositorio en entrega-final y base cargada solo con `php artisan migrate:fresh --seeder=VerificacionSeeder`. Cualquiera responde sobre cualquier parte y puede recibir una petición de cambio de código en vivo.
-
-No se incluyen como obligatorios el despliegue en nube, resumen con modelo de lenguaje, exportación CSV, limitación de intentos de login ni pruebas automatizadas; son retos opcionales posteriores al cumplimiento del núcleo.
-
-## 15. Estado de esta etapa
-
-- Confirmado: integrantes Raúl y Diego, sector ferretería y disponibilidad informada por el equipo.
-- Definido para revisión: regla de cantidad mínima y decisiones de la sección 6.
-- Preparado: primera especificación; no hay aplicación implementada ni pruebas ejecutadas en esta etapa.
-- Siguiente etapa: revisar este documento, preparar plan.md y AGENTS.md y crear el repositorio. La etiqueta spec-v1 debe crearse en ese repositorio; este archivo por sí solo no crea la etiqueta.
+Defensa oral de 15 minutos por pareja, nota individual: tres servicios, Postman y solo VerificacionSeeder en entorno exclusivo; explicar decisiones y modificar código en vivo. No se crea aquí entrega-final ni se reinicia una base. Despliegue, IA en el producto, CSV y limitación API de intentos son retos opcionales; no sustituyen el núcleo.
