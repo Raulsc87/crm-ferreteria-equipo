@@ -5,10 +5,16 @@ Actualizado: 7 de noviembre de 2026. Proyecto de Raúl y Diego; sector ferreter�
 ## Estado del repositorio
 
 - Repositorio de equipo: [Raulsc87/crm-ferreteria-equipo](https://github.com/Raulsc87/crm-ferreteria-equipo).
-- main conserva las tres importaciones de Raúl: documentación/configuración, panel Laravel y API REST.
-- Diego aportó seis commits en frontend-diego, hasta f510413, y abrió [PR #1](https://github.com/Raulsc87/crm-ferreteria-equipo/pull/1). Sigue sin integrar.
-- revision-raul conserva frontend-diego y el commit documental b69df52, publicado por autorización previa. El cierre documental de esa verificación está autorizado para publicarse solo en revision-raul, sin integrar el PR.
+- La solución combina las tres importaciones de Raúl (documentación/configuración, Laravel y API) con el frontend de Diego. La integración autorizada en main se sigue mediante los PR.
+- Diego aportó seis commits en frontend-diego, hasta f510413, y abrió [PR #1](https://github.com/Raulsc87/crm-ferreteria-equipo/pull/1). Su integración mediante merge commit está autorizada por Raúl.
+- revision-raul conserva frontend-diego y el commit documental b69df52, publicado por autorización previa. El cierre de verificación quedó publicado en 1fd6f7d; ahora está autorizada la integración de los PR mediante merge commits.
 - El proceso previo, sus pruebas y spec-v1 pertenecen al [repositorio original](https://github.com/Raulsc87/crm-ferreteria). No se atribuyen al historial nuevo; fuentes en [anexo](anexo-evidencias.md).
+
+## Aprobación del diseño e integración
+
+Raúl aprobó visualmente el diseño de Diego. La revisión en pareja y Postman gráfico siguen pendientes. La verificación está guardada en 1fd6f7d; frontend-diego permanece en f510413 y sus commits están en revision-raul. No cambió código respecto de lo probado: no se repiten suites.
+
+Está autorizada la publicación de revision-raul y la integración mediante dos merge commits: PR #1 de frontend-diego y PR de documentación/resultados desde revision-raul. Se conservan ambas ramas; no se autoriza entrega-final, nuevas etiquetas ni cambios de base. Estas instrucciones sustituyen únicamente las restricciones de integración/publicación de las etapas anteriores.
 
 ## Arquitectura y responsables reales
 
@@ -17,7 +23,7 @@ Panel Blade/Eloquent y API Express/SQL comparten MySQL. La SPA usa módulos Java
 | Parte | Evidencia de participación | Revisión pendiente |
 | --- | --- | --- |
 | Documentación, Laravel y API importados | Raul Soto: 8b0341b, 7a904de y 17bdd09, con asistencia de IA documentada | Diego revisa y explica; no se declara revisión completada |
-| Importación y rediseño SPA | Diego7: cc341bb, e91759c, 49c453a, 63fdc85, 44e1427 y f510413 | Raúl revisa diseño e integración; PR pendiente |
+| Importación y rediseño SPA | Diego7: cc341bb, e91759c, 49c453a, 63fdc85, 44e1427 y f510413 | Diseño aprobado visualmente por Raúl; revisión en pareja pendiente |
 | Documentación resumida y verificación combinada | Solicitadas por Raúl, ejecutadas con Codex; resumen guardado en b69df52 | Cierre documental autorizado; revisión humana en pareja pendiente |
 | Defensa y comprensión de todas las piezas | Responsabilidad de ambos | Ensayo individual de cada integrante |
 
@@ -39,7 +45,7 @@ Las fases mantienen los nombres usados durante el desarrollo. Aprobado históric
 | 7. API: oportunidades y actividades | A4/A5/A7, precio copiado, transiciones/historial y seguimiento | Raúl, original/importación | Implementado; preservar reglas y contratos |
 | 8. Reportes en ambas puertas | A6/L6, meses Guatemala, precio histórico y cifras comunes | Raúl, original/importación | Histórico coincide; A6 separada de base manual |
 | 9. SPA completa | F1–F6 y presentación responsive; sin cambiar backend | Original importado; rediseño real de Diego | Verificación combinada 47/47: unidades, diseño simulado e integración real; pareja pendiente |
-| 10. Verificación y entrega | Matriz, errores reales IA, Postman, revisión cruzada y ensayo | Ambos; revisión documental actual de Raúl | En curso; no integrar ni publicar todavía |
+| 10. Verificación y entrega | Matriz, errores reales IA, Postman, revisión cruzada y ensayo | Ambos; revisión documental actual de Raúl | Integración mediante PR autorizada; revisión en pareja, Postman gráfico y entrega pendientes |
 
 ## Verificación de la versión combinada — 7 de noviembre de 2026
 
@@ -56,10 +62,11 @@ Etapa autorizada sobre b69df529b7a7493ac66a2472a788292fbb8d4242 en revision-raul
 
 ## Pendientes concretos
 
-- [ ] Raúl y Diego revisan el diseño de PR #1 en escritorio y 375 px; completar flujo con datos propios sin borrar registros ajenos.
+- [x] Raúl aprueba visualmente el diseño de Diego, según su confirmación. Esta aprobación no sustituye la revisión en pareja.
+- [ ] Raúl y Diego realizan la revisión en pareja del flujo completo, con datos propios sin borrar registros ajenos.
 - [x] Acreditar integración automática panel → API → SPA con el rediseño: asignación/reasignación, cotización, cierre, actividad, resumen y bloqueo por rol/estado; COM-01…05 en verificación, 47 casos aprobados.
 - [ ] Revisar Postman gráfico y los errores principales; las ejecuciones de colección mediante Node no lo sustituyen.
-- [x] Guardar los documentos resumidos revisados: b69df52 por autorización de Raúl. La integración del PR sigue sin autorizar; el commit y publicación de los resultados se autorizaron en una etapa posterior.
+- [x] Guardar los documentos resumidos revisados: b69df52 por autorización de Raúl. El cierre de resultados está guardado en 1fd6f7d y la integración mediante dos PR quedó autorizada después.
 - [ ] Reproducir instalación en otra computadora; comprobar aula y acceso del catedrático al repositorio privado.
 - [ ] Ensayar defensa de 15 minutos y cambios de código en vivo, con explicación individual de cualquier pieza.
 - [ ] Acordar un entorno exclusivo para defensa con solo VerificacionSeeder, sin reiniciar principal, manual ni A6.

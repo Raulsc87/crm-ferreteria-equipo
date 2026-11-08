@@ -10,6 +10,14 @@ El rediseño pertenece a [PR #1](https://github.com/Raulsc87/crm-ferreteria-equi
 
 La preparación documental anterior quedó guardada en b69df52. Esta verificación añade pruebas nuevas de la versión combinada, descritas abajo, sin reinterpretar como nuevas las evidencias del original. El [anexo](anexo-evidencias.md) conserva la historia necesaria.
 
+## Aprobación visual e integración autorizada
+
+Raúl confirmó que aprobó visualmente el diseño de Diego. Esta aprobación es individual: no acredita revisión en pareja, Postman gráfico, accesibilidad completa ni nuevas pruebas automáticas.
+
+La verificación ya quedó guardada en 1fd6f7d28288dfed59f69c84abbe5cb68854998c; no se duplica ese commit. Tras fetch, frontend-diego sigue en f5104135db43407c46bdf72f2993a0400e81e9ad y es ancestro de revision-raul. Laravel, API y frontend coinciden con el código probado sobre b69df52: no hay cambios nuevos que requieran repetir suites.
+
+Se autoriza publicar revision-raul, integrar primero el PR #1 mediante merge commit y después un PR de revision-raul hacia main con documentación, resultados y esta aprobación. Se conservan ramas, autores y commits individuales; sin squash, rebase, force push, cambios de base o etiquetas. El estado de los merges se comprueba en GitHub; las autorizaciones restrictivas de apartados anteriores corresponden a etapas ya cerradas. Revisión en pareja y Postman gráfico permanecen pendientes.
+
 ## Verificación combinada — 7 de noviembre de 2026
 
 **Nueva ejecución en este repositorio:** revision-raul, referencia b69df529b7a7493ac66a2472a788292fbb8d4242, con el frontend de Diego hasta f510413. Ejecutó Codex por solicitud de Raúl; no es una revisión manual de la pareja.
@@ -227,9 +235,9 @@ Fuentes de detección: [A7/A8][E28], [F1][E29] e [integral][E34]. No se inventa 
 
 Histórico: agente inspeccionó capturas Edge de formularios, listas, Mi equipo, reportes, cartera, oportunidades, actividades y resumen a 1280/375. Las tablas del panel pueden desplazarse dentro del contenedor; la página no debía desbordar. Esto no es revisión en pareja ni accesibilidad completa.
 
-La preparación anterior solo comprobó disponibilidad. COM-01…05 documenta ahora pruebas reales y capturas inspeccionadas por el agente; la aprobación visual humana permanece pendiente.
+La preparación anterior solo comprobó disponibilidad. COM-01…05 documenta ahora pruebas reales y capturas inspeccionadas por el agente; la revisión en pareja permanece pendiente; la aprobación visual de Raúl se registra por separado.
 
-Pendientes: revisar en pareja diseño y recorrido del PR; comprobar permisos/validaciones/errores en sus navegadores; Postman gráfico; ensayo individual, instalación externa, aula, acceso del catedrático y política de hitos del repositorio importado. No se marca completada entrega-final ni un cambio de requisito todavía no publicado. No se modifica ni reinicia ninguna base para preparar la defensa.
+Raúl aprobó visualmente el diseño, según su confirmación. Pendientes: revisar en pareja el recorrido del PR; comprobar permisos/validaciones/errores en sus navegadores; Postman gráfico; ensayo individual, instalación externa, aula, acceso del catedrático y política de hitos del repositorio importado. No se marca completada entrega-final ni un cambio de requisito todavía no publicado. No se modifica ni reinicia ninguna base para preparar la defensa.
 
 [E15]: https://github.com/Raulsc87/crm-ferreteria/blob/033a51e6cb570b9909fe143597bad8bc05da2044/docs/verificacion.md#L349
 [E16]: https://github.com/Raulsc87/crm-ferreteria/blob/033a51e6cb570b9909fe143597bad8bc05da2044/docs/verificacion.md#L413
