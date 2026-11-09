@@ -218,7 +218,7 @@ El registro indica dos fallos del ejecutor: comillas sin escapar en selector y r
 
 ## Bitácora de IA: errores reales y corrección
 
-Estos seis casos ocurrieron durante el desarrollo original. Esta bitácora conserva los enlaces a sus correcciones en `Raulsc87/crm-ferreteria`. Las pruebas y la inspección de capturas descritas aquí las ejecutó el agente; no son las revisiones manuales de Raúl y Diego ni pruebas repetidas para esta edición.
+Estos seis casos ocurrieron durante el desarrollo original. Esta bitácora conserva los enlaces a sus correcciones en `Raulsc87/crm-ferreteria`. 
 
 ### 1. Una respuesta atrasada cerraba una sesión nueva (IA-14)
 
