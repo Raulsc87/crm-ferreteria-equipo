@@ -218,18 +218,55 @@ El registro indica dos fallos del ejecutor: comillas sin escapar en selector y r
 
 ## Bitácora de IA: errores reales y corrección
 
-Todos los commits de esta tabla son del **repositorio original**, no del nuevo. Los incidentes tempranos y de ejecutores se resumen en el anexo. No basta atribuir un problema a la IA sin detección y evidencia.
+Estos seis casos ocurrieron durante el desarrollo original. Esta bitácora conserva los enlaces a sus correcciones en `Raulsc87/crm-ferreteria`. Las pruebas y la inspección de capturas descritas aquí las ejecutó el agente; no son las revisiones manuales de Raúl y Diego ni pruebas repetidas para esta edición.
 
-| Caso | Error y detección real | Corrección y evidencia | Commit del original |
-| --- | --- | --- | --- |
-| IA-11 | Rutas %ZZ/%FF y gzip/deflate corrupto devolvían 500 en HTTP | Parser distingue petición ilegible: cinco casos nuevos 400 JSON | [055398a](https://github.com/Raulsc87/crm-ferreteria/commit/055398aead74b337d50b5ee5b6d81576ca320ac5) |
-| IA-12 | Login rechazaba con 422 correos aceptados por Laravel | Reutiliza validEmail, clave intacta; dos correos válidos inexistentes llegan a 401 | [055398a](https://github.com/Raulsc87/crm-ferreteria/commit/055398aead74b337d50b5ee5b6d81576ca320ac5) |
-| IA-13 | Dobles reproducían devolver conexión tras GET_LOCK o rollback sin confirmar | Descartar conexión incierta; seis casos comprueban liberar antes del pool/destroy | [055398a](https://github.com/Raulsc87/crm-ferreteria/commit/055398aead74b337d50b5ee5b6d81576ca320ac5) |
-| IA-14 | Un 401 atrasado de restauración borraba una sesión nueva; fallo solapado de navegador | Comparar sesión/token vigentes antes de limpiar; nueve pruebas finales | [e729970](https://github.com/Raulsc87/crm-ferreteria/commit/e7299702a56ed880c2238767d2dc183869d2c427) |
-| IA-15 | Cliente asignado no aparecía al volver a Clientes sin refrescar; timeout integral | clients.enter reconsulta y revalida ficha; tres unidades nuevas e integración | [033a51e](https://github.com/Raulsc87/crm-ferreteria/commit/033a51e6cb570b9909fe143597bad8bc05da2044) |
-| IA-16 | Captura solicitada a 375 resultó de 524 px por filtro largo; innerWidth ocultaba desborde | Limitar wrappers/selects; comparar ancho solicitado, esperar fuentes; captura 375, 31/232 + integral 1/1 | [033a51e](https://github.com/Raulsc87/crm-ferreteria/commit/033a51e6cb570b9909fe143597bad8bc05da2044) |
+### 1. Una respuesta atrasada cerraba una sesión nueva (IA-14)
 
-Fuentes de detección: [A7/A8][E28], [F1][E29] e [integral][E34]. No se inventa un fallo nuevo de IA para esta edición documental.
+- **Error:** una respuesta de sesión vencida podía llegar después de que el vendedor iniciara sesión de nuevo y borrar esa sesión nueva.
+- **Detección:** una prueba automatizada en el navegador retrasó la respuesta de la sesión anterior hasta después del nuevo inicio de sesión y comprobó que se perdía el acceso.
+- **Corrección:** antes de borrar la sesión, se comprueba que siga siendo la misma que originó la petición.
+- **Verificación:** las nueve pruebas finales pasaron, incluido el caso de las dos sesiones solapadas.
+- **Evidencia:** [commit e729970](https://github.com/Raulsc87/crm-ferreteria/commit/e7299702a56ed880c2238767d2dc183869d2c427).
+
+### 2. La lista no se actualizaba al regresar a Clientes (IA-15)
+
+- **Error:** al volver a Clientes desde otra sección, se mostraba la lista guardada en memoria. Un cliente recién asignado desde el panel no aparecía sin actualizar la página.
+- **Detección:** el recorrido automatizado de integración asignó un cliente desde el panel y regresó a Clientes; la espera terminó sin encontrarlo.
+- **Corrección:** al entrar en Clientes, se consultan otra vez las listas y el cupo, y se comprueba si la ficha abierta sigue siendo accesible.
+- **Verificación:** pasaron tres pruebas nuevas y el recorrido de integración, sin actualizar la página manualmente. También se comprobó la pérdida de sesión durante esa consulta.
+- **Evidencia:** [commit 033a51e](https://github.com/Raulsc87/crm-ferreteria/commit/033a51e6cb570b9909fe143597bad8bc05da2044).
+
+### 3. Un filtro desbordaba la página en pantalla estrecha (IA-16)
+
+- **Error:** el filtro de vendedor de las oportunidades del panel ocupaba demasiado ancho cuando había nombres largos.
+- **Detección:** al inspeccionar una captura solicitada a 375 píxeles, el agente encontró una imagen de 524 píxeles. La comprobación anterior no detectaba ese desbordamiento.
+- **Corrección:** se limitó el ancho del filtro y de sus contenedores. La prueba pasó a comparar el ancho con los 375 píxeles solicitados y a esperar la carga de las fuentes.
+- **Verificación:** la captura final midió 375 píxeles de ancho. Pasaron las pruebas afectadas de Laravel y el recorrido de integración.
+- **Evidencia:** [commit 033a51e](https://github.com/Raulsc87/crm-ferreteria/commit/033a51e6cb570b9909fe143597bad8bc05da2044).
+
+### 4. La API confundía peticiones ilegibles con fallos del servidor (IA-11)
+
+- **Error:** algunas direcciones mal codificadas, como `%ZZ`, y cuerpos comprimidos dañados recibían el código 500, que indica un fallo interno del servidor.
+- **Detección:** las pruebas enviaron esas peticiones a la API real y observaron respuestas 500.
+- **Corrección:** se reconocen esos errores de lectura y se responde con el código 400, que indica una petición ilegible, y un mensaje general en formato JSON.
+- **Verificación:** cinco casos nuevos recibieron el código 400 y la respuesta JSON esperada.
+- **Evidencia:** [commit 055398a](https://github.com/Raulsc87/crm-ferreteria/commit/055398aead74b337d50b5ee5b6d81576ca320ac5).
+
+### 5. El acceso de la API rechazaba correos válidos para Laravel (IA-12)
+
+- **Error:** la validación del inicio de sesión rechazaba ciertos formatos de correo que Laravel sí aceptaba.
+- **Detección:** se compararon ambos validadores con correos de dominio local y direcciones entre comillas; la API los rechazaba con el código 422, como si su formato fuera inválido.
+- **Corrección:** el inicio de sesión reutiliza la función de validación de correo existente, sin modificar la contraseña recibida.
+- **Verificación:** dos correos válidos sin cuenta registrada llegaron a la consulta de usuarios y recibieron el código 401 por credenciales incorrectas. También pasó la comparación con el validador de Laravel.
+- **Evidencia:** [commit 055398a](https://github.com/Raulsc87/crm-ferreteria/commit/055398aead74b337d50b5ee5b6d81576ca320ac5).
+
+### 6. Se podía reutilizar una conexión cuyo estado era incierto (IA-13)
+
+- **Error:** después de ciertos fallos, la API podía devolver una conexión a la reserva de conexiones reutilizables sin saber si conservaba un bloqueo o cambios pendientes.
+- **Detección:** pruebas con conexiones simuladas reprodujeron fallos al adquirir un bloqueo o al cancelar una transacción, es decir, una operación que debe confirmarse completa o deshacerse. No fueron cortes observados en el servidor real.
+- **Corrección:** si no se puede confirmar que la conexión quedó en un estado seguro, se descarta. Los bloqueos deben liberarse antes de devolver una conexión para reutilizarla.
+- **Verificación:** seis pruebas comprobaron la confirmación o cancelación de operaciones, la liberación de bloqueos y el descarte de conexiones con estado incierto.
+- **Evidencia:** [commit 055398a](https://github.com/Raulsc87/crm-ferreteria/commit/055398aead74b337d50b5ee5b6d81576ca320ac5).
 
 ## Inspección visual y pendientes
 
