@@ -218,12 +218,12 @@ El registro indica dos fallos del ejecutor: comillas sin escapar en selector y r
 
 ## Bitácora de IA: errores reales y corrección
 
-Estos seis casos ocurrieron durante el desarrollo original. Esta bitácora conserva los enlaces a sus correcciones en `Raulsc87/crm-ferreteria`. 
+Estos seis casos ocurrieron durante el desarrollo original. Esta bitácora conserva los enlaces a sus correcciones en `Raulsc87/crm-ferreteria`. La evidencia procede de pruebas automatizadas e inspección de capturas; estas detecciones no se atribuyen a revisiones manuales de Raúl y Diego.
 
 ### 1. Una respuesta atrasada cerraba una sesión nueva (IA-14)
 
 - **Error:** una respuesta de sesión vencida podía llegar después de que el vendedor iniciara sesión de nuevo y borrar esa sesión nueva.
-- **Detección:** una prueba automatizada en el navegador retrasó la respuesta de la sesión anterior hasta después del nuevo inicio de sesión y comprobó que se perdía el acceso.
+- **Detección:** las pruebas automatizadas detectaron que se perdía el acceso al retrasar en el navegador la respuesta de la sesión anterior hasta después del nuevo inicio de sesión.
 - **Corrección:** antes de borrar la sesión, se comprueba que siga siendo la misma que originó la petición.
 - **Verificación:** las nueve pruebas finales pasaron, incluido el caso de las dos sesiones solapadas.
 - **Evidencia:** [commit e729970](https://github.com/Raulsc87/crm-ferreteria/commit/e7299702a56ed880c2238767d2dc183869d2c427).
@@ -231,7 +231,7 @@ Estos seis casos ocurrieron durante el desarrollo original. Esta bitácora conse
 ### 2. La lista no se actualizaba al regresar a Clientes (IA-15)
 
 - **Error:** al volver a Clientes desde otra sección, se mostraba la lista guardada en memoria. Un cliente recién asignado desde el panel no aparecía sin actualizar la página.
-- **Detección:** el recorrido automatizado de integración asignó un cliente desde el panel y regresó a Clientes; la espera terminó sin encontrarlo.
+- **Detección:** las pruebas automatizadas detectaron que el cliente no aparecía al asignarlo desde el panel y regresar a Clientes; la espera terminó sin encontrarlo.
 - **Corrección:** al entrar en Clientes, se consultan otra vez las listas y el cupo, y se comprueba si la ficha abierta sigue siendo accesible.
 - **Verificación:** pasaron tres pruebas nuevas y el recorrido de integración, sin actualizar la página manualmente. También se comprobó la pérdida de sesión durante esa consulta.
 - **Evidencia:** [commit 033a51e](https://github.com/Raulsc87/crm-ferreteria/commit/033a51e6cb570b9909fe143597bad8bc05da2044).
@@ -239,7 +239,7 @@ Estos seis casos ocurrieron durante el desarrollo original. Esta bitácora conse
 ### 3. Un filtro desbordaba la página en pantalla estrecha (IA-16)
 
 - **Error:** el filtro de vendedor de las oportunidades del panel ocupaba demasiado ancho cuando había nombres largos.
-- **Detección:** al inspeccionar una captura solicitada a 375 píxeles, el agente encontró una imagen de 524 píxeles. La comprobación anterior no detectaba ese desbordamiento.
+- **Detección:** la inspección de una captura solicitada a 375 píxeles mostró una imagen de 524 píxeles. La comprobación automatizada anterior no detectaba ese desbordamiento.
 - **Corrección:** se limitó el ancho del filtro y de sus contenedores. La prueba pasó a comparar el ancho con los 375 píxeles solicitados y a esperar la carga de las fuentes.
 - **Verificación:** la captura final midió 375 píxeles de ancho. Pasaron las pruebas afectadas de Laravel y el recorrido de integración.
 - **Evidencia:** [commit 033a51e](https://github.com/Raulsc87/crm-ferreteria/commit/033a51e6cb570b9909fe143597bad8bc05da2044).
@@ -247,7 +247,7 @@ Estos seis casos ocurrieron durante el desarrollo original. Esta bitácora conse
 ### 4. La API confundía peticiones ilegibles con fallos del servidor (IA-11)
 
 - **Error:** algunas direcciones mal codificadas, como `%ZZ`, y cuerpos comprimidos dañados recibían el código 500, que indica un fallo interno del servidor.
-- **Detección:** las pruebas enviaron esas peticiones a la API real y observaron respuestas 500.
+- **Detección:** las pruebas automatizadas detectaron respuestas 500 al enviar esas peticiones a la API real.
 - **Corrección:** se reconocen esos errores de lectura y se responde con el código 400, que indica una petición ilegible, y un mensaje general en formato JSON.
 - **Verificación:** cinco casos nuevos recibieron el código 400 y la respuesta JSON esperada.
 - **Evidencia:** [commit 055398a](https://github.com/Raulsc87/crm-ferreteria/commit/055398aead74b337d50b5ee5b6d81576ca320ac5).
@@ -255,7 +255,7 @@ Estos seis casos ocurrieron durante el desarrollo original. Esta bitácora conse
 ### 5. El acceso de la API rechazaba correos válidos para Laravel (IA-12)
 
 - **Error:** la validación del inicio de sesión rechazaba ciertos formatos de correo que Laravel sí aceptaba.
-- **Detección:** se compararon ambos validadores con correos de dominio local y direcciones entre comillas; la API los rechazaba con el código 422, como si su formato fuera inválido.
+- **Detección:** las pruebas automatizadas detectaron diferencias al comparar ambos validadores con correos de dominio local y direcciones entre comillas: la API los rechazaba con el código 422, como si su formato fuera inválido.
 - **Corrección:** el inicio de sesión reutiliza la función de validación de correo existente, sin modificar la contraseña recibida.
 - **Verificación:** dos correos válidos sin cuenta registrada llegaron a la consulta de usuarios y recibieron el código 401 por credenciales incorrectas. También pasó la comparación con el validador de Laravel.
 - **Evidencia:** [commit 055398a](https://github.com/Raulsc87/crm-ferreteria/commit/055398aead74b337d50b5ee5b6d81576ca320ac5).
@@ -263,7 +263,7 @@ Estos seis casos ocurrieron durante el desarrollo original. Esta bitácora conse
 ### 6. Se podía reutilizar una conexión cuyo estado era incierto (IA-13)
 
 - **Error:** después de ciertos fallos, la API podía devolver una conexión a la reserva de conexiones reutilizables sin saber si conservaba un bloqueo o cambios pendientes.
-- **Detección:** pruebas con conexiones simuladas reprodujeron fallos al adquirir un bloqueo o al cancelar una transacción, es decir, una operación que debe confirmarse completa o deshacerse. No fueron cortes observados en el servidor real.
+- **Detección:** las pruebas automatizadas detectaron el problema usando conexiones simuladas que fallaban al adquirir un bloqueo o al cancelar una transacción, es decir, una operación que debe confirmarse completa o deshacerse. No fueron cortes observados en el servidor real.
 - **Corrección:** si no se puede confirmar que la conexión quedó en un estado seguro, se descarta. Los bloqueos deben liberarse antes de devolver una conexión para reutilizarla.
 - **Verificación:** seis pruebas comprobaron la confirmación o cancelación de operaciones, la liberación de bloqueos y el descarte de conexiones con estado incierto.
 - **Evidencia:** [commit 055398a](https://github.com/Raulsc87/crm-ferreteria/commit/055398aead74b337d50b5ee5b6d81576ca320ac5).
